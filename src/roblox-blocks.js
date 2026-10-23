@@ -212,7 +212,7 @@ register("datastoreSet","DataStore SetAsync (server)","Data",{storeName:"PlayerD
 });
 
 // Factories do not use eval and never output implicit newlines inside assignments.
-export const ROBLOX_DEFINITIONS=Object.fromEntries(Object.entries(table).map(([k,v])=>[k,v.definition]));
+export const ROBLOX_DEFINITIONS=Object.fromEntries(Object.entries(table).map(([k,v])=>[k,k.startsWith("global")?{...v.definition,group:"Variables · Globals",color:"purple"}:v.definition]));
 export const ROBLOX_TYPES=new Set(Object.keys(table));
 export function robloxCode(block,language,level,emit){
   const entry=table[block.type];
