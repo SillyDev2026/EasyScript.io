@@ -16,6 +16,11 @@ let activeTab = "code";
 let toastTimer = null;
 let saveTimer = null;
 let studioFeatures = null;
+let outputFrame = 0;
+function queueOutputs(){
+  if(outputFrame)return;
+  outputFrame=requestAnimationFrame(()=>{outputFrame=0;updateOutputs();});
+}
 
 function load() {
   try {
@@ -145,13 +150,13 @@ function fieldInput(block,key){
     select.value=original;
     select.setAttribute("aria-label","Roblox service");
     select.addEventListener("focus",checkpoint,{once:true});
-    select.addEventListener("change",()=>{block.fields[key]=select.value;updateOutputs();persist();});
+    select.addEventListener("change",()=>{block.fields[key]=select.value;queueOutputs();persist();});
     label.append(select);return label;
   }
   ctrl.value=block.fields[key]??"";
   ctrl.setAttribute("aria-label",DEFINITIONS[block.type].name+" "+key);
-  ctrl.addEventListener("change",()=>{block.fields[key]=ctrl.value;updateOutputs();persist();});
-  ctrl.addEventListener("input",()=>{block.fields[key]=ctrl.value;updateOutputs();persist();});
+  ctrl.addEventListener("change",()=>{block.fields[key]=ctrl.value;queueOutputs();persist();});
+  ctrl.addEventListener("input",()=>{block.fields[key]=ctrl.value;queueOutputs();persist();});
   if(key==="operator")ctrl.addEventListener("focus",checkpoint,{once:true});
   label.append(ctrl);
   return label;
@@ -308,6 +313,7 @@ function render(){
   $("language").value=project.language;
   $("workspace").replaceChildren();
   renderList(project.blocks,$("workspace"));
+  if(outputFrame){cancelAnimationFrame(outputFrame);outputFrame=0;}
   updateOutputs();updateHistory();persist();
 }
 function download(filename,content,type){
@@ -360,8 +366,12 @@ function bindActions(){
   document.addEventListener("keydown",event=>{
     if(!(event.ctrlKey||event.metaKey)||event.altKey)return;
     const key=event.key.toLowerCase();
-    if(key==="z"){event.preventDefault();event.shiftKey?redo():undo();}
-    if(key==="y"){event.preventDefault();redo();}
+    const editable=event.target instanceof HTMLInputElement||event.target instanceof HTMLTextAreaElement||event.target?.isContentEditable;
+    if(key==="z"||key==="y"){
+      if(editable)return;
+      event.preventDefault();
+      if(key==="z"){event.shiftKey?redo():undo();}else redo();
+    }
     if(key==="s"){event.preventDefault();persist();notify("Project saved locally");}
     if(key==="l"&&event.shiftKey){event.preventDefault();renderLibrary();$("libraryDialog").showModal();}
     if(key==="enter"){event.preventDefault();$("simulateBtn").click();}
