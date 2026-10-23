@@ -1,8 +1,12 @@
 import {VERSION,DEFINITIONS,newBlock,projectTemplate,sanitizeProject,findLocation,addBlock,traverse,generate,lint,simulate} from "./engine.js";
+import {highlightInto} from "./highlight.js";
+import {listSavedProjects,saveProjectSnapshot,openSavedProject,deleteSavedProject} from "./library.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
-const icons = {print:"▣",variable:"▤",set:"↗",if:"◇",repeat:"⟳",wait:"◷",comment:"≡",function:"ƒ",call:"↳"};
+const icons = {print:"▣",variable:"▤",set:"↗",if:"◇",repeat:"⟳",wait:"◷",comment:"≡",function:"ƒ",call:"↳",
+  increment:"+1",while:"∞",service:"◈",playerJoined:"♟",partTouched:"◉",remoteReceived:"⇢",
+  leaderstat:"★",setProperty:"◆",createPart:"⬡"};
 let project = load();
 let undoStack = [];
 let redoStack = [];
@@ -93,7 +97,7 @@ function palette(){
   let total=0;
   for(const group of groups){
     const list=Object.keys(DEFINITIONS).filter(type=>DEFINITIONS[type].group===group&&
-      (DEFINITIONS[type].name+" "+group).toLowerCase().includes(query));
+      (DEFINITIONS[type].name+" "+group+" "+type).toLowerCase().includes(query));
     if(!list.length)continue;
     parent.append(make("div","palette-heading",group));
     for(const type of list){
@@ -117,6 +121,18 @@ function fieldInput(block,key){
   }else{
     ctrl.type="text";ctrl.maxLength=400;ctrl.spellcheck=false;
     ctrl.autocomplete="off";ctrl.addEventListener("focus",checkpoint,{once:true});
+  }
+  if(block.type==="service"&&key==="service"){
+    const original=block.fields[key];
+    const services=["Players","ReplicatedStorage","ServerStorage","RunService","TweenService","UserInputService","DataStoreService","Lighting","CollectionService"];
+    const select=make("select","");
+    for(const name of services){const option=make("option","",name);option.value=name;select.append(option);}
+    if(!services.includes(original)){const option=make("option","",String(original));option.value=String(original);select.append(option);}
+    select.value=original;
+    select.setAttribute("aria-label","Roblox service");
+    select.addEventListener("focus",checkpoint,{once:true});
+    select.addEventListener("change",()=>{block.fields[key]=select.value;updateOutputs();persist();});
+    label.append(select);return label;
   }
   ctrl.value=block.fields[key]??"";
   ctrl.setAttribute("aria-label",DEFINITIONS[block.type].name+" "+key);
@@ -253,13 +269,22 @@ function updateOutputs(){
   $("footerStats").textContent=count+" blocks · "+(project.language==="javascript"?"JavaScript":"Luau");
   $("languageBadge").textContent=project.language==="javascript"?"JS":"LUAU";
   $("codeFilename").textContent=project.language==="javascript"?"script.js":"script.luau";
-  $("codeOutput").textContent=generate(project);
+  highlightInto($("codeOutput"),generate(project),project.language);
   const problems=lint(project);
   $("issueCount").textContent=String(problems.length);
   const pane=$("diagnosticsPane");pane.replaceChildren();
   if(!problems.length)pane.append(make("p","success","✓ No basic issues found. Test exported code in its target runtime."));
   for(const issue of problems){
-    const element=make("div","problem "+issue.severity,issue.severity.toUpperCase()+": "+issue.message);
+    const element=make("button","problem "+issue.severity,issue.severity.toUpperCase()+": "+issue.message);
+    element.type="button";
+    element.title="Locate this block in the workspace";
+    element.addEventListener("click",()=>{
+      const block=[...document.querySelectorAll("[data-block-id]")].find(el=>el.dataset.blockId===issue.id);
+      if(!block)return;
+      block.scrollIntoView({behavior:"smooth",block:"center"});
+      block.classList.add("focused-problem");
+      setTimeout(()=>block.classList.remove("focused-problem"),2200);
+    });
     pane.append(element);
   }
 }
@@ -280,7 +305,41 @@ function download(filename,content,type){
 function safeFilename(text){
   return String(text||"script").trim().replace(/[^a-z0-9_-]+/gi,"-").replace(/^-+|-+$/g,"").slice(0,60)||"script";
 }
+function renderLibrary(){
+  const list=$("libraryList");list.replaceChildren();
+  let projects;
+  try{projects=listSavedProjects(localStorage);}
+  catch(error){list.append(make("p","panel-note","Project library unavailable: "+error.message));return;}
+  $("libraryCount").textContent=projects.length+" saved";
+  if(!projects.length){list.append(make("p","panel-note","No snapshots yet. Save your first project below."));return;}
+  for(const entry of projects){
+    const card=make("article","library-entry");
+    const details=make("div","library-entry-details");
+    details.append(make("strong","",entry.title),
+      make("span","",entry.language.toUpperCase()+" · "+entry.topLevelBlocks+" top-level blocks · "+new Date(entry.createdAt).toLocaleString()));
+    const actions=make("div","library-entry-actions");
+    const open=make("button","btn compact","Open");
+    open.addEventListener("click",()=>{
+      if(project.blocks.length&&!confirm("Open this snapshot? Unsaved changes to your current project may be lost."))return;
+      try{mutate(()=>{project=openSavedProject(localStorage,entry.id);});$("libraryDialog").close();notify("Snapshot opened");}
+      catch(error){notify("Could not open project: "+error.message);}
+    });
+    const remove=make("button","btn compact ghost","Delete");
+    remove.setAttribute("aria-label","Delete "+entry.title);
+    remove.addEventListener("click",()=>{
+      if(!confirm("Delete this saved snapshot?"))return;
+      try{deleteSavedProject(localStorage,entry.id);renderLibrary();}
+      catch(error){notify("Delete failed: "+error.message);}
+    });
+    actions.append(open,remove);card.append(details,actions);list.append(card);
+  }
+}
 function bindActions(){
+  $("libraryBtn").addEventListener("click",()=>{renderLibrary();$("libraryDialog").showModal();});
+  $("saveSnapshotBtn").addEventListener("click",()=>{
+    try{saveProjectSnapshot(localStorage,project);renderLibrary();notify("Snapshot saved to this browser");}
+    catch(error){notify("Could not save snapshot: "+error.message);}
+  });
   $("undoBtn").addEventListener("click",undo);
   $("redoBtn").addEventListener("click",redo);
   document.addEventListener("keydown",event=>{
@@ -289,6 +348,8 @@ function bindActions(){
     if(key==="z"){event.preventDefault();event.shiftKey?redo():undo();}
     if(key==="y"){event.preventDefault();redo();}
     if(key==="s"){event.preventDefault();persist();notify("Project saved locally");}
+    if(key==="l"&&event.shiftKey){event.preventDefault();renderLibrary();$("libraryDialog").showModal();}
+    if(key==="enter"){event.preventDefault();$("simulateBtn").click();}
   });
   $("clearBtn").addEventListener("click",()=>{
     if(!project.blocks.length||confirm("Clear every block in this project?"))mutate(()=>project.blocks=[]);
@@ -300,7 +361,11 @@ function bindActions(){
   $("language").addEventListener("change",event=>{checkpoint();project.language=event.target.value;updateOutputs();persist();updateHistory();});
   $("loadTemplateBtn").addEventListener("click",()=>{
     if(project.blocks.length&&!confirm("Load a template? Your current blocks will be replaced."))return;
-    const language=project.language;mutate(()=>{project=projectTemplate($("template").value);project.language=language;});
+    const language=project.language;
+    mutate(()=>{project=projectTemplate($("template").value);
+      if(!["leaderstats","touch","remote"].includes($("template").value))project.language=language;
+    });
+    notify("Template loaded. Customize each block to get started.");
   });
   $("copyCodeBtn").addEventListener("click",async()=>{
     try{await navigator.clipboard.writeText(generate(project));notify("Generated code copied");}
