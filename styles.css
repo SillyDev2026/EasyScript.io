@@ -339,3 +339,26 @@ html[data-theme="light"] .workspace-name-label input{background:#f9fbff;color:#2
  .block-actions .tiny-btn{min-height:32px;min-width:30px}
  .workspace-bottom .btn{flex:1;min-width:0}
 }
+
+/* v0.6: scalable 128-block catalog and reliable copy dialog */
+.palette-filter-label{display:block;margin:4px 18px 6px;color:#93a8cd;font-size:11px;font-weight:700}
+.palette-category{display:block;width:calc(100% - 36px);max-width:none;margin:0 18px 6px;background:#14233b;color:#e1ebff;border:1px solid #3d5173;padding:9px 10px;border-radius:9px;font-size:12px}
+.palette-results{margin:6px 18px 8px;color:#8095b5;font-size:11px}
+.modal-search{width:100%;max-width:none;margin:9px 0 12px;background:#101e34;border:1px solid #415a81;border-radius:10px;padding:12px;color:#ebf3ff;outline-offset:2px;font-size:13px}
+.modal-choices{max-height:min(52vh,540px);overflow:auto;overscroll-behavior:contain}
+.modal-choices .choice-button{min-width:0;margin:3px 0;white-space:normal;overflow-wrap:anywhere}
+.copy-source-dialog{width:min(720px,94vw);max-width:none;background:#101d32;color:#e1ebff;border:1px solid #536c95;border-radius:17px;padding:clamp(15px,2vw,24px)}
+.copy-source-dialog h2{font-size:20px;margin:0 0 8px;color:#e9f1ff}
+.copy-source-dialog p{color:#9fb7d7;font-size:13px;line-height:1.5}
+.copy-source-textarea{display:block;width:100%;min-height:250px;max-height:50vh;padding:14px;margin:14px 0;border:1px solid #45618a;border-radius:9px;resize:vertical;background:#081527;color:#bde7ff;font:12px/1.6 ui-monospace,Consolas,monospace;white-space:pre;overflow:auto}
+.copy-source-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+html[data-theme="light"] .copy-source-dialog{background:#fff;color:#243956;border-color:#cad9ec}
+html[data-theme="light"] .copy-source-dialog h2{color:#203551}
+html[data-theme="light"] .copy-source-dialog p{color:#526985}
+html[data-theme="light"] .copy-source-textarea{background:#edf3fd;color:#1d3657;border-color:#cad9ec}
+html[data-theme="light"] .palette-category,html[data-theme="light"] .modal-search{background:#f5f8ff;color:#1e3654;border-color:#c3d5ee}
+@media(max-width:760px){
+  .palette-category{min-height:42px}
+  .modal-choices{grid-template-columns:minmax(0,1fr);max-height:57dvh}
+  .copy-source-textarea{min-height:42dvh;font-size:12px}
+}
