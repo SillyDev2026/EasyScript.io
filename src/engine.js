@@ -156,7 +156,7 @@ export function generate(project) {
   };
   traverse(project.blocks,b=>{
     if(["playerJoined","playerLeaving","leaderstat"].includes(b.type))needsPlayers=true;
-    if(["datastoreGet","datastoreSet"].includes(b.type)){
+    if(["datastoreGet","datastoreSet","datastoreUpdate"].includes(b.type)){
       const name=String(b.fields.storeName||"PlayerDataV1");
       if(!stores.has(name)){
         const base=safeSymbol(name.replace(/V\d+$/i,""),"playerData")+"Store";
@@ -239,7 +239,9 @@ export function generate(project) {
       if(javascript){lines.push(...javascript);continue;}
       const projectCode=projectBlockCode(b,project.language,level);
       if(projectCode){lines.push(...projectCode);continue;}
-      const expanded=expandedLuauCode(b,project.language,level,emitChild);
+      const expanded=expandedLuauCode(b,project.language,level,emitChild,{
+        stores,initialGlobalWrites,reserve,scope
+      });
       if(expanded){lines.push(...expanded);continue;}
       const expandedJS=expandedJSCode(b,project.language,level,emitChild);
       if(expandedJS){lines.push(...expandedJS);continue;}
@@ -360,7 +362,7 @@ export function lint(project){
   let needsPlayersAlias=false,needsStoreAlias=false;
   traverse(project.blocks,b=>{
     if(["playerJoined","playerLeaving","leaderstat"].includes(b.type))needsPlayersAlias=true;
-    if(["datastoreGet","datastoreSet"].includes(b.type))needsStoreAlias=true;
+    if(["datastoreGet","datastoreSet","datastoreUpdate"].includes(b.type))needsStoreAlias=true;
   });
   traverse(project.blocks,b=>{
     const f=b.fields;
