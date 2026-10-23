@@ -2,6 +2,8 @@ import {VERSION,DEFINITIONS,newBlock,projectTemplate,sanitizeProject,findLocatio
 import {highlightInto} from "./highlight.js";
 import {listSavedProjects,saveProjectSnapshot,openSavedProject,deleteSavedProject} from "./library.js";
 import {mountStudio} from "./studio.js";
+import {loadWorkspace,saveWorkspace,activeFile,commitActive,chooseFile} from "./workspace.js";
+import {mountWorkspaceUI} from "./workspace-ui.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -9,6 +11,9 @@ const icons = {print:"▣",variable:"▤",set:"↗",if:"◇",repeat:"⟳",wait:"
   increment:"+1",while:"∞",service:"◈",playerJoined:"♟",partTouched:"◉",remoteReceived:"⇢",
   leaderstat:"★",setProperty:"◆",createPart:"⬡"};
 let project = load();
+let workspace = loadWorkspace(localStorage,project);
+project = activeFile(workspace).project;
+let workspaceUI = null;
 let undoStack = [];
 let redoStack = [];
 let insertion = {parent:null,branch:"root"};
@@ -57,12 +62,38 @@ function updateHistory(){
   $("undoBtn").disabled=!undoStack.length;
   $("redoBtn").disabled=!redoStack.length;
 }
+function commitNow(){
+  clearTimeout(saveTimer);
+  commitActive(workspace,project);
+  localStorage.setItem(STORAGE_KEY,snapshot());
+  saveWorkspace(localStorage,workspace);
+}
+function switchFile(id,skipCommit=false){
+  if(!skipCommit){try{commitNow();}catch(error){notify("Save failed: "+error.message);return;}}
+  try{chooseFile(workspace,id);}
+  catch(error){notify(error.message);return;}
+  project=activeFile(workspace).project;
+  undoStack=[];redoStack=[];
+  render();workspaceUI?.refresh();
+}
+function updateWorkspace(next=null){
+  if(next){
+    workspace=next;
+    project=activeFile(workspace).project;
+    undoStack=[];redoStack=[];
+  }
+  try{saveWorkspace(localStorage,workspace);}catch(error){notify("Workspace storage unavailable: "+error.message);}
+  if(next)render();
+  workspaceUI?.refresh();
+}
 function persist(){
+  commitActive(workspace,project);
   clearTimeout(saveTimer);
   $("saveStatus").textContent="Saving…";
   saveTimer=setTimeout(()=>{
     try{
       localStorage.setItem(STORAGE_KEY,snapshot());
+      saveWorkspace(localStorage,workspace);
       $("saveStatus").textContent="● Saved locally";
     }catch(error){
       $("saveStatus").textContent="Local save unavailable";
@@ -372,7 +403,7 @@ function bindActions(){
       event.preventDefault();
       if(key==="z"){event.shiftKey?redo():undo();}else redo();
     }
-    if(key==="s"){event.preventDefault();persist();notify("Project saved locally");}
+    if(key==="s"){event.preventDefault();try{commitNow();notify("Workspace saved locally");}catch(error){notify("Save failed: "+error.message);}}
     if(key==="l"&&event.shiftKey){event.preventDefault();renderLibrary();$("libraryDialog").showModal();}
     if(key==="enter"){event.preventDefault();$("simulateBtn").click();}
   });
@@ -429,5 +460,6 @@ function bindActions(){
 }
 bindActions();
 studioFeatures=mountStudio({getProject:()=>project,notify,renderPalette:palette});
+workspaceUI=mountWorkspaceUI({getWorkspace:()=>workspace,switchFile,updateWorkspace,notify,commitNow});
 palette();render();selectTab("code");
 console.info("EasyScript.io visual editor v"+VERSION+" initialized");
