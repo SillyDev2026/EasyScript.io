@@ -88,3 +88,30 @@ test("ZIP path validation rejects traversal and valid Unicode filenames remain s
   const buf=createZip([{name:"scripts/Über.luau",data:"print('ok')"}]);
   assert.ok(buf instanceof Uint8Array);
 });
+
+test("DataStore alias avoids locally declared names and stays unique",()=>{
+  const p=projectTemplate("blank");
+  addBlock(p,"variable").fields.name="playerDataStore";
+  const event=addBlock(p,"playerJoined");
+  addBlock(p,"datastoreGet",event.id,"body");
+  const code=generate(p);
+  assert.match(code,/local playerDataStore2 = DataStoreService:GetDataStore/);
+  assert.match(code,/return playerDataStore2:GetAsync/);
+  assert.equal((code.match(/local playerDataStore = /g)||[]).length,1);
+});
+test("source code names readable parts and repeat indices without internal IDs",()=>{
+  const p=projectTemplate("blank");
+  addBlock(p,"createPart");
+  addBlock(p,"repeat");
+  const source=generate(p);
+  assert.match(source,/local myPart = Instance.new\("Part"\)/);
+  assert.match(source,/for index = 1, 3 do/);
+  assert.doesNotMatch(source,/part_b_|__index_/);
+});
+test("script variables may not mask automatic Roblox service locals",()=>{
+  const p=projectTemplate("blank");
+  addBlock(p,"globalWrite").fields.key="Players";
+  addBlock(p,"playerJoined");
+  const diagnostics=lint(p);
+  assert.ok(diagnostics.some(x=>x.severity==="error"&&x.message.includes("Players")));
+});
