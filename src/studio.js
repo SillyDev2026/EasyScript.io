@@ -118,7 +118,9 @@ export function mountStudio({getProject,notify,renderPalette}){
     apply();notify("Layout reset");
   });
   toolbar.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
-    prefs.mobile=btn.dataset.view;apply();
+    prefs.mobile=btn.dataset.view;
+    if(prefs.focus&&prefs.mobile!=="workspace")prefs.focus=false;
+    apply();
   }));
   const help=node("dialog","shortcuts-dialog");
   help.innerHTML='<h2>Keyboard shortcuts</h2><p>Ctrl/Cmd + Z: Undo · Shift + Ctrl/Cmd + Z: Redo · Ctrl/Cmd + S: Save · Ctrl/Cmd + Shift + L: Projects · Ctrl/Cmd + Enter: Simulate</p><p>Tap the star beside a palette block to favorite it. Search project blocks to jump directly to an existing step.</p><form method="dialog"><button class="btn primary">Close</button></form>';
