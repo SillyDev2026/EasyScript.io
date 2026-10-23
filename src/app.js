@@ -13,6 +13,7 @@ import {mountEditorPro} from "./editor-pro.js";
 import {mountUltraExpansion} from "./ultra-expansion.js";
 import {mountUltraSuite} from "./ultra-suite-ui.js";
 import {loadCustomDefinitions} from "./custom-blocks.js";
+import {storeSocket,clearSocket} from "./v2-expressions.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -222,8 +223,9 @@ function fieldInput(block,key){
   }
   ctrl.value=block.fields[key]??"";
   ctrl.setAttribute("aria-label",DEFINITIONS[block.type].name+" "+key);
-  ctrl.addEventListener("change",()=>{block.fields[key]=ctrl.value;queueOutputs();persist();});
-  ctrl.addEventListener("input",()=>{block.fields[key]=ctrl.value;queueOutputs();persist();});
+  const updateText=()=>{clearSocket(block,key);block.fields[key]=ctrl.value;queueOutputs();persist();};
+  ctrl.addEventListener("change",updateText);
+  ctrl.addEventListener("input",updateText);
   if(key==="operator")ctrl.addEventListener("focus",checkpoint,{once:true});
   label.append(ctrl);
   const expressionKeys=new Set(["value","amount","left","right","initial","seconds","min","max","x","y","z","r","g","b",
@@ -233,9 +235,11 @@ function fieldInput(block,key){
     open.type="button";open.title="Open typed expression blocks";
     open.setAttribute("aria-label","Build expression for "+DEFINITIONS[block.type].name+" "+key);
     open.addEventListener("click",()=>{
-      expressionComposer?.open(block.fields[key],value=>{
-        checkpoint();block.fields[key]=value;ctrl.value=value;queueOutputs();persist();updateHistory();
-      });
+      expressionComposer?.open(block.fields[key],(value,tree)=>{
+        checkpoint();
+        storeSocket(block,key,tree,project.language);
+        ctrl.value=value;queueOutputs();persist();updateHistory();
+      },block.expressions?.[key]);
     });
     label.append(open);
   }
