@@ -7,7 +7,7 @@ import {JS_TYPES} from "../src/javascript-blocks.js";
 import {PACKS} from "../src/packs.js";
 
 test("v0.6 exposes 128 blocks with a Luau-heavy catalog",()=>{
-  assert.equal(VERSION,"0.6.0");
+  assert.equal(VERSION,"0.7.0");
   assert.equal(Object.keys(DEFINITIONS).length,128);
   assert.ok(ROBLOX_TYPES.size>=70);
   assert.ok(JS_TYPES.size>=15);
@@ -42,19 +42,19 @@ test("all assignments are on one physical line, even with accidental pasted newl
     }
   }
 });
-test("simple globals use _G with one-line declarations and JS globalThis",()=>{
+test("script globals are ordinary Luau locals and JavaScript globalThis",()=>{
   const p=projectTemplate("globalCounter");
   const luau=generate(p);
-  assert.match(luau,/_G\["Coins"\] = 0/);
-  assert.match(luau,/_G\["Coins"\] = \(_G\["Coins"\] or 0\) \+ \(1\)/);
-  assert.match(luau,/local Coins = _G\["Coins"\]/);
+  assert.match(luau,/local Coins = 0/);
+  assert.match(luau,/Coins = \(Coins or 0\) \+ \(1\)/);
+  assert.doesNotMatch(luau,/_G/);
   assert.doesNotMatch(luau,/local Coins =\s*\n/);
   p.language="javascript";
   const js=generate(p);
   assert.match(js,/globalThis\["Coins"\] = 0/);
   assert.doesNotThrow(()=>new vm.Script(js));
-  assert.ok(lint(p).some(x=>x.severity==="warning"));
 });
+
 test("all starter packs produce an appropriate source language and diagnostics",()=>{
   assert.equal(PACKS.length,9);
   for(const item of PACKS){
@@ -75,16 +75,17 @@ test("new event blocks emit nested body and close subscriptions",()=>{
     assert.match(source,/end\)/);
   }
 });
-test("DataStore source uses protected pcall and distinct locals",()=>{
+test("DataStore code hoists its store and uses distinct, readable status names",()=>{
   const p=projectTemplate("blank");
-  const a=addBlock(p,"datastoreSet"),b=addBlock(p,"datastoreSet");
-  assert.notEqual(a.id,b.id);
+  addBlock(p,"datastoreSet");addBlock(p,"datastoreSet");
   const source=generate(p);
-  assert.match(source,/pcall\(function\(\)/);
-  const names=[...source.matchAll(/local (es_[A-Za-z0-9_]+)Store =/g)].map(x=>x[1]);
+  assert.equal((source.match(/GetDataStore\("PlayerDataV1"\)/g)||[]).length,1);
+  assert.equal((source.match(/pcall\(function\(\)/g)||[]).length,2);
+  const names=[...source.matchAll(/local (saveSuccess\d*), (saveError\d*) =/g)];
   assert.equal(names.length,2);
-  assert.notEqual(names[0],names[1]);
+  assert.notEqual(names[0][1],names[1][1]);
 });
+
 test("newline expressions are flagged rather than silently accepted",()=>{
   const p=projectTemplate("blank");
   const block=addBlock(p,"variable");block.fields.value="5\n+ 3";
@@ -97,7 +98,7 @@ test("network and globals include targeted caveat warnings",()=>{
   const p=projectTemplate("blank");
   addBlock(p,"globalWrite");addBlock(p,"datastoreGet");addBlock(p,"remoteFireServer");
   const issues=lint(p);
-  assert.ok(issues.some(x=>x.message.includes("_G is shared")));
+  assert.ok(issues.some(x=>x.message.includes("Script locals")));
   assert.ok(issues.some(x=>x.message.includes("DataStore requests")));
   assert.ok(issues.some(x=>x.message.includes("LocalScript")));
 });
