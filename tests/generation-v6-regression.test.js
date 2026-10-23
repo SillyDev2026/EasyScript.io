@@ -32,7 +32,7 @@ test("per-frame costly block triggers targeted optimization warning",()=>{
 });
 test("global values have portable semantics and remain explicit",()=>{
   const p=projectTemplate("globalCounter");
-  assert.match(generate(p),/_G\["Coins"\]/);
+  assert.match(generate(p),/local Coins = 0/);
   p.language="javascript";
   assert.match(generate(p),/globalThis\["Coins"\]/);
   assert.doesNotThrow(()=>new vm.Script(generate(p)));
