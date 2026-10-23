@@ -9,6 +9,7 @@ import {copyBlockTree,pasteBlockTree,clipboardAvailable,countBlockTree} from "./
 import {copyCodeWithFallback,createCopyFallback} from "./code-copy.js";
 import {mountExpressionComposer} from "./expression-ui.js";
 import {addRecovery} from "./recovery.js";
+import {mountEditorPro} from "./editor-pro.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -33,6 +34,7 @@ let saveTimer = null;
 let studioFeatures = null;
 let ultraPlus = null;
 let expressionComposer = null;
+let editorPro = null;
 let outputFrame = 0;
 function queueOutputs(){
   if(outputFrame)return;
@@ -394,6 +396,7 @@ function updateOutputs(){
   if(!problems.length)pane.append(make("p","success","✓ No basic issues found. Test exported code in its target runtime."));
   studioFeatures?.update();
   ultraPlus?.update();
+  editorPro?.update();
   for(const issue of problems){
     const element=make("button","problem "+issue.severity,issue.severity.toUpperCase()+": "+issue.message);
     element.type="button";
@@ -542,6 +545,15 @@ function bindActions(){
 bindActions();
 studioFeatures=mountStudio({getProject:()=>project,notify,renderPalette:palette});
 expressionComposer=mountExpressionComposer({getLanguage:()=>project.language,notify});
+editorPro=mountEditorPro({
+ getProject:()=>project,getWorkspace:()=>workspace,notify,
+ mutate:fn=>mutate(()=>fn(project)),
+ jump:id=>{
+  document.querySelector('[data-view="workspace"]')?.click();
+  const el=[...document.querySelectorAll("[data-block-id]")].find(x=>x.dataset.blockId===id);
+  el?.scrollIntoView({behavior:"smooth",block:"center"});
+ }
+});
 ultraPlus=mountUltraPlus({getProject:()=>project,getWorkspace:()=>workspace,notify,
   scrollToBlock:id=>{
     document.querySelector('[data-view="workspace"]')?.click();
