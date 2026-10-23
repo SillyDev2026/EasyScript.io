@@ -72,13 +72,13 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
         catch(error){notify(error.message);}
       });
       duplicate.addEventListener("click",()=>{
-        try{commitNow();const copy=duplicateFile(getWorkspace(),file.id);updateWorkspace();switchFile(copy.id);notify("File duplicated");}
+        try{commitNow();const copy=duplicateFile(getWorkspace(),file.id);updateWorkspace();switchFile(copy.id,true);notify("File duplicated");}
         catch(error){notify(error.message);}
       });
       remove.disabled=ws.files.length<2;
       remove.addEventListener("click",()=>{
         if(!confirm("Delete "+file.name+" from this workspace? Export a backup first if needed."))return;
-        try{commitNow();removeFile(getWorkspace(),file.id);updateWorkspace();switchFile(getWorkspace().activeId);notify("File deleted");}
+        try{commitNow();removeFile(getWorkspace(),file.id);updateWorkspace();switchFile(getWorkspace().activeId,true);notify("File deleted");}
         catch(error){notify(error.message);}
       });
       controls.append(open,rename,duplicate,remove);row.append(info,controls);fileList.append(row);
@@ -93,7 +93,7 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
     if(!kinds.includes(kind.trim())){notify("Choose Script, LocalScript, ModuleScript or JavaScript");return;}
     const name=prompt("New file name","NewScript");
     if(name===null)return;
-    try{commitNow();const file=addFile(getWorkspace(),name,kind.trim());updateWorkspace();switchFile(file.id);notify("New "+kind.trim()+" created");}
+    try{commitNow();const file=addFile(getWorkspace(),name,kind.trim());updateWorkspace();switchFile(file.id,true);notify("New "+kind.trim()+" created");}
     catch(error){notify(error.message);}
   }
   addButton.addEventListener("click",newFile);
@@ -115,7 +115,7 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
       const ws=validateWorkspace(data);
       if(!confirm("Replace current workspace with "+ws.files.length+" imported files? Export your existing workspace first."))return;
       updateWorkspace(ws);
-      switchFile(ws.activeId);
+      switchFile(ws.activeId,true);
       notify("Workspace imported");
       dialog.close();
     }catch(error){notify("Import failed: "+error.message);}
