@@ -1,0 +1,42 @@
+
+/* v2 developer suite: connected expression workspace, offline changes and source conversion */
+.v2-dev-suite{width:100%;min-width:0;max-width:100%;box-sizing:border-box;margin:clamp(12px,1.4vw,22px) 0;padding:clamp(12px,1.5vw,22px);border:1px solid #405a80;border-radius:17px;background:linear-gradient(115deg,#112543,#142039)}
+.v2-dev-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.v2-dev-head h2{margin:0;font-size:clamp(17px,1.5vw,23px);color:#e7f3ff}
+.v2-dev-head p,.v2-dev-description{color:#9db8dc;font-size:12px;line-height:1.55}
+.v2-dev-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.v2-dev-tabs .btn{min-width:0;min-height:43px;white-space:normal;padding:8px;font-size:12px;line-height:1.4}
+.v2-dev-tabs .btn.active{background:#355ca9;color:#fff;border-color:#86b1ff}
+.v2-dev-body{min-width:0;max-width:100%;border-top:1px solid #3d5070;margin-top:16px;padding-top:14px}
+.v2-dev-textarea{display:block;width:100%;box-sizing:border-box;min-height:clamp(200px,38dvh,500px);max-height:65dvh;max-width:100%;min-width:0;border:1px solid #486791;border-radius:11px;padding:14px;resize:vertical;background:#0c1c33;color:#d8eaff;font:clamp(11px,1vw,13px)/1.6 ui-monospace,Consolas,monospace;white-space:pre;overflow:auto}
+.v2-dev-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:12px 0}
+.v2-dev-actions .btn{min-width:0;min-height:39px;white-space:normal}
+.v2-dev-file{display:inline-block;max-width:100%;font-size:12px;color:#b2cef0}
+.v2-dev-report{min-width:0;border:1px solid #385477;background:#0c1f37;border-radius:11px;padding:12px;max-height:min(43dvh,370px);overflow:auto;margin:10px 0}
+.v2-dev-report p{margin:4px 0;color:#c4dcfa;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.v2-dev-report .v2-dev-diagnostic{color:#f6b9a5}
+.v2-dev-change{border-left:2px solid #75a9ea;padding:5px 8px}
+.v2-dev-preview{box-sizing:border-box;min-width:0;max-width:100%;max-height:min(47dvh,450px);overflow:auto;white-space:pre;padding:13px;border-radius:10px;border:1px solid #385477;background:#09182c;color:#e0f0ff;font:12px/1.6 ui-monospace,monospace}
+.v2-dev-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(135px,100%),1fr));gap:9px}
+.v2-dev-stat{display:flex;flex-direction:column;gap:5px;padding:14px;border:1px solid #425f88;border-radius:10px;background:#183554}
+.v2-dev-stat strong{font-size:20px;color:#e0f1ff;font-variant-numeric:tabular-nums}
+.v2-dev-stat span{font-size:11px;color:#a9c5e7}
+.v2-dev-status{color:#accded;font-size:12px;line-height:1.5;padding:7px 12px;border-left:3px solid #7b9bd0}
+.v2-dev-status[data-kind="error"]{border-color:#e07878;color:#ffd7d7}
+.v2-dev-status[data-kind="warning"]{border-color:#eab96b;color:#ffe0aa}
+.expression-drop-ready{outline:3px dashed #8cc7ff;outline-offset:2px;background:#24446d!important}
+.expression-node-action{border:1px solid #56729a;border-radius:7px;background:#253e60;color:#d7eaff;padding:6px 7px;font-size:10px;flex:0 0 auto}
+.expression-node-action:hover,.expression-node-action:focus-visible{background:#3c5f8b}
+.expression-node-head{flex-wrap:wrap}
+.expression-slot .expression-node{touch-action:pan-y}
+html[data-theme="light"] .v2-dev-suite{background:#fff;color:#224067;border-color:#bfcfe6}
+html[data-theme="light"] .v2-dev-head h2{color:#183a60}
+html[data-theme="light"] .v2-dev-head p,html[data-theme="light"] .v2-dev-description{color:#55718d}
+html[data-theme="light"] .v2-dev-report,html[data-theme="light"] .v2-dev-textarea,html[data-theme="light"] .v2-dev-preview{color:#1e3e63;background:#edf4ff;border-color:#c7d7ea}
+html[data-theme="light"] .v2-dev-report p{color:#234468}
+html[data-theme="light"] .v2-dev-stat{background:#f0f6ff;border-color:#ccd9ec}
+html[data-theme="light"] .v2-dev-stat strong,html[data-theme="light"] .v2-dev-stat span{color:#315277}
+html[data-theme="light"] .expression-node-action{background:#e2efff;color:#254a7a;border-color:#bdd6f2}
+@media(max-width:960px){.v2-dev-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.v2-dev-suite{padding:11px}.v2-dev-tabs .btn{min-height:45px;font-size:11px}.v2-dev-actions .btn{flex:1 1 140px}.v2-dev-preview{font-size:11px}.expression-node-action{min-height:35px}}
+@media(max-width:350px){.v2-dev-tabs{grid-template-columns:1fr}.v2-dev-tabs .btn{min-height:43px}}
