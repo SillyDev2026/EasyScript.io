@@ -68,7 +68,7 @@ getter("playerHumanoid","Get humanoid","Players",{name:"Humanoid",character:"cha
 getter("playerFromCharacter","Get player from character","Players",{name:"Player",character:"character"},f=>
   'game:GetService("Players"):GetPlayerFromCharacter('+e(f,"character","character")+")");
 getter("playerCount","Count players","Players",{name:"PlayerCount"},()=>
-  '#game:GetService("Players"):GetPlayers()');
+  '#(game:GetService("Players"):GetPlayers())');
 getter("playerGetById","Get player by UserId","Players",{name:"Player",userId:"12345"},f=>
   'game:GetService("Players"):GetPlayerByUserId('+e(f,"userId","0")+")");
 register("playerKick","Kick player (server)","Players",{player:"player",reason:"Disconnected"},(f,s)=>[
@@ -138,7 +138,7 @@ getter("remoteInvokeServer","Remote InvokeServer (client)","Networking",{name:"R
   e(f,"remote")+":InvokeServer("+e(f,"value")+")");
 event("remoteClientEvent","Remote OnClientEvent (client)","Networking",{remote:"game.ReplicatedStorage.GameEvent"},f=>
   e(f,"remote")+".OnClientEvent","value");
-register("remoteMakeEvent","Create RemoteEvent (server)","Networking",{name:"Event",parent:'game:GetService("ReplicatedStorage")',eventName:"GameEvent"},(f,s)=>[
+register("remoteMakeEvent","Create RemoteEvent (server)","Networking",{name:"Event",parent:"game.ReplicatedStorage",eventName:"GameEvent"},(f,s)=>[
   s+"local "+f.name+' = Instance.new("RemoteEvent")',
   s+f.name+".Name = "+q(f,"eventName"),
   s+f.name+".Parent = "+e(f,"parent")
@@ -160,7 +160,7 @@ register("uiPosition","Set UI position","UI",{target:"script.Parent.Frame",posit
 register("uiColor","Set UI background color","UI",{target:"script.Parent.Frame",color:"Color3.fromRGB(60, 120, 255)"},(f,s)=>[
   s+e(f,"target")+".BackgroundColor3 = "+e(f,"color")
 ]);
-register("uiTween","Tween UI object","UI",{target:"script.Parent.Frame",seconds:"0.3",properties:'{Transparency = 0.5}'},(f,s)=>[
+register("uiTween","Tween UI object","UI",{target:"script.Parent.Frame",seconds:"0.3",properties:'{BackgroundTransparency = 0.5}'},(f,s)=>[
   s+'game:GetService("TweenService"):Create('+e(f,"target")+", TweenInfo.new("+e(f,"seconds")+"), "+e(f,"properties")+"):Play()"
 ]);
 event("uiButtonClick","TextButton clicked","UI",{button:"script.Parent.TextButton"},f=>e(f,"button")+".MouseButton1Click");
@@ -200,8 +200,8 @@ register("datastoreGet","DataStore GetAsync (server)","Data",{name:"Value",store
     s+"if not "+ok+" then warn("+f.name+"); "+f.name+" = nil end"
   ];
 });
-register("datastoreSet","DataStore SetAsync (server)","Data",{storeName:"PlayerDataV1",key:'tostring(player.UserId)',value:"Coins"},(f,s)=>{
-  const token="es"+Math.abs(String(f.storeName).length+String(f.key).length);
+register("datastoreSet","DataStore SetAsync (server)","Data",{storeName:"PlayerDataV1",key:'tostring(player.UserId)',value:"Coins"},(f,s,emit,b)=>{
+  const token="es_"+String(b.id).replace(/[^a-zA-Z0-9_]/g,"_");
   return [
     s+"local "+token+'Store = game:GetService("DataStoreService"):GetDataStore('+q(f,"storeName")+")",
     s+"local "+token+"Ok, "+token+"Err = pcall(function()",
