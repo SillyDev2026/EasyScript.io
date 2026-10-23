@@ -4,6 +4,7 @@ import vm from "node:vm";
 import {VERSION,projectTemplate,addBlock,generate,lint,sanitizeProject} from "../src/engine.js";
 import {newExpression,compileExpression} from "../src/expressions.js";
 import {parseExpressionToTree,suggestExpressionTree} from "../src/v2-expression-parser.js";
+import {robloxProfilerModule,robloxProfilerExample} from "../src/v2-profiler.js";
 import {storeSocket,clearSocket,checkSocketTree,materializeSocketProject,socketTreeSummary} from "../src/v2-expressions.js";
 import {importSourceToBlocks,makeImportedProject} from "../src/v2-code-bridge.js";
 import {createWorkspace,addFile} from "../src/workspace.js";
@@ -196,4 +197,24 @@ test("simple Roblox PlayerAdded event and service preamble roundtrip without dup
  assert.equal(parsed.blocks[0].type,"service");
  assert.equal(parsed.blocks[1].type,"playerJoined");
  assert.equal((generate({...p,blocks:parsed.blocks}).match(/GetService\("Players"\)/g)||[]).length,1);
+});
+
+test("Studio profiler module records durations, samples, failures and repeated calls",()=>{
+ const code=robloxProfilerModule();
+ assert.match(code,/function Profiler.measure/);
+ assert.match(code,/os.clock\(\)/);
+ assert.match(code,/table.pack\(pcall\(callback, \.\.\.\)\)/);
+ assert.match(code,/sample.count \+= 1/);
+ assert.match(code,/sample.failures \+= 1/);
+ assert.match(code,/function Profiler.snapshot/);
+ assert.match(code,/function Profiler.reset/);
+ assert.match(code,/return Profiler/);
+ assert.doesNotMatch(code,/_G\b/);
+});
+test("Profiler scaffold has a matching manual require/call example, not a browser backend",()=>{
+ const code=robloxProfilerExample();
+ assert.match(code,/local Profiler = require\(script.Parent:WaitForChild\("Profiler"\)\)/);
+ assert.match(code,/Profiler.measure\("Sum calculation", function\(\)/);
+ assert.match(code,/Profiler.snapshot\(\)/);
+ assert.match(code,/Studio server/);
 });
