@@ -1,4 +1,34 @@
-# EasyScript.io v1.3.0 — Ultra Developer Suite + Roblox Studio Importer
+# EasyScript.io v1.4.0 — Adaptive UI and Percentage Layout Update
+
+[Launch EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [GitHub source](https://github.com/SillyDev2026/EasyScript.io)
+
+## What's new in v1.4
+
+The original CSS contained several competing breakpoint and height declarations from earlier versions. v1.4 introduces **styles/responsive-v14.css**, loaded after the legacy stylesheet, as the final source of truth for sizing and placement.
+
+- **Wide screens (1281px and up):** three panels arranged by user-selected proportions, default **19% block library / 52% nominal editor / 29% code**. Grid spacing is deducted from the editor track.
+- **Tablets and compact desktops (761–1280px):** a responsive **26% blocks / 74% editor** split, with a full-width code/diagnostics panel below.
+- **Phones, foldable cover displays and windows up to 760px:** **one 100%-width panel at a time** using the Blocks / Workspace / Code navigation. Mobile panels have independent internal scrolling.
+- **Tiny screens down to 320px:** single-column block fields, preserved text labels, a single-column block palette, compact touch-friendly toolbar buttons and safe-area padding.
+- **Short-height landscape displays:** flexible scroll containers prevent the editor and source code from being trapped in an undersized viewport.
+- **Size controls:** adjustable desktop Blocks and Code percentages, a live calculated Editor share, and a new **85–120% UI size** control for relevant font sizes and touch controls; settings remain in local storage.
+- **Responsive sizing everywhere:** project/header controls, file tabs, block fields, code preview, Ultra tools, dialog modals, search, diagnostic lists and exports respect available space without horizontal page overflow.
+- **Focus and navigation fixes:** mobile switching to Blocks or Code automatically exits workspace-only Focus Mode; the selected panel always matches the active tab.
+- **Reset layout:** restores 19/52/29 desktop proportions, 100% scale, wrap and line-number defaults without destroying scripts or project data.
+
+The UI *scale* control sizes key controls and text; it does **not** change browser zoom or rescale the whole canvas with CSS transforms. On phones, percentage sliders for desktop sidebars are hidden because each active panel already occupies 100% of the available width.
+
+### Verify the layout
+
+Run \`npm run check && npm test\`. New tests cover viewport breakpoints, slider clamping, malformed saved preferences, 100%-width mobile views, CSS order, mobile palette visibility, Focus Mode behavior and screen-safe dialogs.
+
+**Visual QA caveat:** Automated tests cannot certify every screen, font scaling setting or browser combination. Validate the actual site on the target device(s), especially Android browsers and both orientations of foldables.
+
+---
+
+## Previous v1.3 release
+
+
 
 **Luau-first visual scripting with 172 built-in block types, nine more local Ultra Suite workflows and a Studio-side importer.**
 
