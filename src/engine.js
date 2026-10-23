@@ -218,8 +218,8 @@ export function lint(project){
       problems.push(...extensionDiagnostics(b,project.language,context));
       for(const key of DEFINITIONS[b.type]?.branches||[]){
         checkExtended(b[key]||[],{
-          inLoop:context.inLoop||["while","repeat","each","forRange"].includes(b.type),
-          inFunction:context.inFunction||b.type==="function",
+          inLoop:b.type==="function"?false:context.inLoop||["while","repeat","each","forRange"].includes(b.type),
+          inFunction:context.inFunction||["function","playerJoined","playerLeaving","characterAdded","partTouched","remoteReceived","spawnTask"].includes(b.type),
           hasPlayer:context.hasPlayer||["playerJoined","playerLeaving"].includes(b.type)
         });
       }
