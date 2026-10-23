@@ -62,7 +62,7 @@ export function extensionCode(b,js,level,emit){
     case "returnValue":return [s+"return "+e(f.value)+(js?";":"")];
     case "breakLoop":return [s+"break"+(js?";":"")];
     case "playerLeaving":return js?[s+"// Luau only: Player leaving"]: [
-      s+'game:GetService("Players").PlayerRemoving:Connect(function(player)',
+      s+'Players.PlayerRemoving:Connect(function(player)',
       ...emit(b.body,level+1),s+"end)"];
     case "characterAdded":return js?[s+"// Luau only: Character spawned"]: [
       s+"player.CharacterAdded:Connect(function(character)",...emit(b.body,level+1),s+"end)"];
