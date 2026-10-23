@@ -11,6 +11,8 @@ import {mountExpressionComposer} from "./expression-ui.js";
 import {addRecovery} from "./recovery.js";
 import {mountEditorPro} from "./editor-pro.js";
 import {mountUltraExpansion} from "./ultra-expansion.js";
+import {mountUltraSuite} from "./ultra-suite-ui.js";
+import {loadCustomDefinitions} from "./custom-blocks.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -21,6 +23,7 @@ const icons = {print:"▣",variable:"▤",set:"↗",if:"◇",repeat:"⟳",wait:"
   listSize:"#",each:"⋮",forRange:"1…",returnValue:"↰",breakLoop:"■",
   playerLeaving:"↪",characterAdded:"♟",setAttribute:"⚙",getAttribute:"⇠",
   destroyInstance:"✕",spawnTask:"⚡"};
+loadCustomDefinitions(localStorage,DEFINITIONS);
 let project = load();
 let workspace = loadWorkspace(localStorage,project);
 project = activeFile(workspace).project;
@@ -37,6 +40,7 @@ let ultraPlus = null;
 let expressionComposer = null;
 let editorPro = null;
 let ultraExpansion = null;
+let ultraSuite = null;
 let outputFrame = 0;
 function queueOutputs(){
   if(outputFrame)return;
@@ -399,6 +403,7 @@ function updateOutputs(){
   studioFeatures?.update();
   ultraPlus?.update();
   ultraExpansion?.update();
+  ultraSuite?.update();
   editorPro?.update();
   for(const issue of problems){
     const element=make("button","problem "+issue.severity,issue.severity.toUpperCase()+": "+issue.message);
@@ -568,5 +573,9 @@ ultraPlus=mountUltraPlus({getProject:()=>project,getWorkspace:()=>workspace,noti
 });
 ultraExpansion=mountUltraExpansion({getProject:()=>project,notify});
 workspaceUI=mountWorkspaceUI({getWorkspace:()=>workspace,switchFile,updateWorkspace,notify,commitNow});
+ultraSuite=mountUltraSuite({
+ getProject:()=>project,getWorkspace:()=>workspace,notify,commitNow,updateWorkspace,switchFile,
+ refreshPalette:()=>{setupCategories();palette();}
+});
 setupCategories();palette();render();selectTab("code");
 console.info("EasyScript.io visual editor v"+VERSION+" initialized");
