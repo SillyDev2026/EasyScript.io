@@ -190,6 +190,10 @@ export function generate(project) {
     if(!blocks.length){lines.push(space(level)+(js?"// Add blocks here":"-- Add blocks here"));return;}
     for(let index=0;index<blocks.length;index++) {
       const b=blocks[index],f=b.fields,s=space(level);
+      if(b.type==="moduleReturn"&&(level!==0||index!==blocks.length-1)){
+        lines.push(s+"-- ModuleScript return must be the final top-level block.");
+        continue;
+      }
       if(["breakLoop","returnValue"].includes(b.type)){
         const allowed=b.type==="breakLoop"?scope.loop:scope.func;
         if(!allowed||index!==blocks.length-1){
@@ -303,6 +307,9 @@ export function lint(project){
   function checkExtended(list,context={inLoop:false,inFunction:false,hasPlayer:false}){
     for(let index=0;index<list.length;index++){
       const b=list[index];
+      if(b.type==="moduleReturn"&&(index!==list.length-1||context.inFunction)){
+        problems.push({id:b.id,severity:"error",message:"ModuleScript return must be the final top-level block."});
+      }
       if(["returnValue","breakLoop"].includes(b.type)&&index!==list.length-1){
         problems.push({id:b.id,message:(b.type==="breakLoop"?"Break":"Return")+" must be the last statement in its block body.",severity:"error"});
       }
