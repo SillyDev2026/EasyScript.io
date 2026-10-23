@@ -1,5 +1,6 @@
 import {newExpression,EXPRESSION_KINDS,expressionSlots,expressionType,compileExpression,validateExpression} from "./expressions.js";
 import {checkSocketTree} from "./v2-expressions.js";
+import {suggestExpressionTree} from "./v2-expression-parser.js";
 
 const mk=(tag,cls,text)=>{
   const n=document.createElement(tag);
@@ -130,6 +131,8 @@ export function mountExpressionComposer({getLanguage,notify}){
       if(initialTree){
         try{tree=checkSocketTree(initialTree,language);}
         catch{/* revert to last source expression */}
+      }else{
+        tree=suggestExpressionTree(source,language)||tree;
       }
       applyValue=callback;
       paint();dialog.showModal();
