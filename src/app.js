@@ -2,6 +2,7 @@ import {VERSION,DEFINITIONS,newBlock,projectTemplate,sanitizeProject,findLocatio
 import {highlightInto} from "./highlight.js";
 import {listSavedProjects,saveProjectSnapshot,openSavedProject,deleteSavedProject} from "./library.js";
 import {mountStudio} from "./studio.js";
+import {mountUltraPlus} from "./ultra-plus.js";
 import {loadWorkspace,saveWorkspace,activeFile,commitActive,chooseFile} from "./workspace.js";
 import {mountWorkspaceUI} from "./workspace-ui.js";
 import {copyBlockTree,pasteBlockTree,clipboardAvailable,countBlockTree} from "./clipboard.js";
@@ -28,6 +29,7 @@ let activeTab = "code";
 let toastTimer = null;
 let saveTimer = null;
 let studioFeatures = null;
+let ultraPlus = null;
 let outputFrame = 0;
 function queueOutputs(){
   if(outputFrame)return;
@@ -373,6 +375,7 @@ function updateOutputs(){
   const pane=$("diagnosticsPane");pane.replaceChildren();
   if(!problems.length)pane.append(make("p","success","✓ No basic issues found. Test exported code in its target runtime."));
   studioFeatures?.update();
+  ultraPlus?.update();
   for(const issue of problems){
     const element=make("button","problem "+issue.severity,issue.severity.toUpperCase()+": "+issue.message);
     element.type="button";
@@ -519,6 +522,15 @@ function bindActions(){
 }
 bindActions();
 studioFeatures=mountStudio({getProject:()=>project,notify,renderPalette:palette});
+ultraPlus=mountUltraPlus({getProject:()=>project,getWorkspace:()=>workspace,notify,
+  scrollToBlock:id=>{
+    document.querySelector('[data-view="workspace"]')?.click();
+    const element=[...document.querySelectorAll("[data-block-id]")].find(x=>x.dataset.blockId===id);
+    element?.scrollIntoView({behavior:"smooth",block:"center"});
+    element?.classList.add("focused-problem");
+    if(element)setTimeout(()=>element.classList.remove("focused-problem"),1300);
+  }
+});
 workspaceUI=mountWorkspaceUI({getWorkspace:()=>workspace,switchFile,updateWorkspace,notify,commitNow});
 setupCategories();palette();render();selectTab("code");
 console.info("EasyScript.io visual editor v"+VERSION+" initialized");
