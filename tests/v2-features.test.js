@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 import {VERSION,projectTemplate,addBlock,generate,lint,sanitizeProject} from "../src/engine.js";
 import {newExpression,compileExpression} from "../src/expressions.js";
+import {parseExpressionToTree,suggestExpressionTree} from "../src/v2-expression-parser.js";
 import {storeSocket,clearSocket,checkSocketTree,materializeSocketProject,socketTreeSummary} from "../src/v2-expressions.js";
 import {importSourceToBlocks,makeImportedProject} from "../src/v2-code-bridge.js";
 import {createWorkspace,addFile} from "../src/workspace.js";
@@ -123,4 +124,31 @@ test("ZIP export preserves full project socket graphs in workspace JSON",()=>{
  const project=JSON.parse(entries.find(x=>x.name==="project.easyscript-workspace.json").data);
  assert.equal(project.files[0].project.blocks[0].expressions.value.kind,"add");
  assert.ok(entries.find(x=>x.name.startsWith("scripts/")).data.includes("local Coins = (2 + 4)"));
+});
+
+test("existing Luau arithmetic and comparisons reconstruct nested editable sockets",()=>{
+ const code="(Coins + (2 * 3))";
+ const tree=parseExpressionToTree(code,"luau");
+ assert.equal(tree.kind,"add");
+ assert.equal(tree.left.kind,"variable");
+ assert.equal(tree.right.kind,"multiply");
+ assert.equal(compileExpression(tree,"luau"),code);
+ const check=parseExpressionToTree("(Coins >= 10) and true","luau");
+ assert.equal(check.kind,"and");
+ assert.match(compileExpression(check,"luau"),/Coins >= 10/);
+});
+test("JavaScript logic is reconstructed without any runtime eval",()=>{
+ const code="(true && (Coins !== 0))";
+ const tree=parseExpressionToTree(code,"javascript");
+ assert.equal(tree.kind,"and");
+ const generated=compileExpression(tree,"javascript");
+ assert.doesNotThrow(()=>new vm.Script(generated));
+ assert.match(generated,/!==/);
+});
+test("unsupported expressions remain untouched rather than being silently reinterpreted",()=>{
+ for(const source of ["math.random(1, 5)","x.y", "(() => alert(1))()","local x = 5"]){
+  assert.equal(suggestExpressionTree(source,"luau"),null);
+ }
+ assert.throws(()=>parseExpressionToTree("Coins == 1 && true","luau"),/not Luau/);
+ assert.throws(()=>parseExpressionToTree("Coins ~= 1","javascript"),/not JavaScript/);
 });
