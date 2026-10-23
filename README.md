@@ -1,4 +1,4 @@
-# EasyScript.io v1.0.0
+# EasyScript.io v1.0.1
 
 **A browser-based, Luau-first visual scripting studio** with 131 script blocks, a multi-file project workspace, code generation and responsive mobile editing.
 
