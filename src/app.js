@@ -14,6 +14,7 @@ import {mountUltraExpansion} from "./ultra-expansion.js";
 import {mountUltraSuite} from "./ultra-suite-ui.js";
 import {loadCustomDefinitions} from "./custom-blocks.js";
 import {storeSocket,clearSocket} from "./v2-expressions.js";
+import {mountV2Studio} from "./v2-developer-ui.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -42,6 +43,7 @@ let expressionComposer = null;
 let editorPro = null;
 let ultraExpansion = null;
 let ultraSuite = null;
+let v2Studio = null;
 let outputFrame = 0;
 function queueOutputs(){
   if(outputFrame)return;
@@ -413,6 +415,7 @@ function updateOutputs(){
   ultraExpansion?.update();
   ultraSuite?.update();
   editorPro?.update();
+  v2Studio?.refresh();
   for(const issue of problems){
     const element=make("button","problem "+issue.severity,issue.severity.toUpperCase()+": "+issue.message);
     element.type="button";
@@ -584,6 +587,10 @@ workspaceUI=mountWorkspaceUI({getWorkspace:()=>workspace,switchFile,updateWorksp
 ultraSuite=mountUltraSuite({
  getProject:()=>project,getWorkspace:()=>workspace,notify,commitNow,updateWorkspace,switchFile,
  refreshPalette:()=>{setupCategories();palette();}
+});
+v2Studio=mountV2Studio({
+ getProject:()=>project,getWorkspace:()=>workspace,notify,commitNow,updateWorkspace,switchFile,
+ replaceProject:next=>mutate(()=>{project=next;})
 });
 setupCategories();palette();render();selectTab("code");
 console.info("EasyScript.io visual editor v"+VERSION+" initialized");
