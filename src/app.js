@@ -7,6 +7,8 @@ import {loadWorkspace,saveWorkspace,activeFile,commitActive,chooseFile} from "./
 import {mountWorkspaceUI} from "./workspace-ui.js";
 import {copyBlockTree,pasteBlockTree,clipboardAvailable,countBlockTree} from "./clipboard.js";
 import {copyCodeWithFallback,createCopyFallback} from "./code-copy.js";
+import {mountExpressionComposer} from "./expression-ui.js";
+import {addRecovery} from "./recovery.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -30,6 +32,7 @@ let toastTimer = null;
 let saveTimer = null;
 let studioFeatures = null;
 let ultraPlus = null;
+let expressionComposer = null;
 let outputFrame = 0;
 function queueOutputs(){
   if(outputFrame)return;
@@ -76,6 +79,7 @@ function commitNow(){
   commitActive(workspace,project);
   localStorage.setItem(STORAGE_KEY,snapshot());
   saveWorkspace(localStorage,workspace);
+  addRecovery(localStorage,workspace);
 }
 function switchFile(id,skipCommit=false){
   if(!skipCommit){try{commitNow();}catch(error){notify("Save failed: "+error.message);return;}}
@@ -103,6 +107,7 @@ function persist(){
     try{
       localStorage.setItem(STORAGE_KEY,snapshot());
       saveWorkspace(localStorage,workspace);
+      addRecovery(localStorage,workspace);
       $("saveStatus").textContent="● Saved locally";
     }catch(error){
       $("saveStatus").textContent="Local save unavailable";
@@ -209,6 +214,19 @@ function fieldInput(block,key){
   ctrl.addEventListener("input",()=>{block.fields[key]=ctrl.value;queueOutputs();persist();});
   if(key==="operator")ctrl.addEventListener("focus",checkpoint,{once:true});
   label.append(ctrl);
+  const expressionKeys=new Set(["value","amount","left","right","initial","seconds","min","max","x","y","z","r","g","b",
+    "h","s","v","start","end","step","count","visible","health","speed","height","fallback","alpha","size","position","color"]);
+  if(expressionKeys.has(key)&&block.type!=="comment"&&block.type!=="globalRead"){
+    const open=make("button","expr-open","◇ Build");
+    open.type="button";open.title="Open typed expression blocks";
+    open.setAttribute("aria-label","Build expression for "+DEFINITIONS[block.type].name+" "+key);
+    open.addEventListener("click",()=>{
+      expressionComposer?.open(block.fields[key],value=>{
+        checkpoint();block.fields[key]=value;ctrl.value=value;queueOutputs();persist();updateHistory();
+      });
+    });
+    label.append(open);
+  }
   return label;
 }
 function containsId(block,id){
@@ -522,6 +540,7 @@ function bindActions(){
 }
 bindActions();
 studioFeatures=mountStudio({getProject:()=>project,notify,renderPalette:palette});
+expressionComposer=mountExpressionComposer({getLanguage:()=>project.language,notify});
 ultraPlus=mountUltraPlus({getProject:()=>project,getWorkspace:()=>workspace,notify,
   scrollToBlock:id=>{
     document.querySelector('[data-view="workspace"]')?.click();
