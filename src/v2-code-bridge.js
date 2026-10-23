@@ -1,71 +1,142 @@
-// Strict, intentionally partial source-to-block translator.
-// Rejects unrecognized syntax instead of dropping source or inventing behavior.
+// Conservative LuaU / JavaScript source-to-block translator.
+// Imports a documented subset; aborts on ANY unsupported statement, malformed nesting
+// or source larger than 125KB. Never runs or evaluates source.
 import {newBlock} from "./engine.js";
 const IDENT="[A-Za-z_][A-Za-z0-9_]*";
-const R={local:new RegExp("^local ("+IDENT+")(?:\\s*:\\s*([A-Za-z_][\\w.?]*))?\\s*=\\s*(.+)$"),
-  jsLocal:new RegExp("^(?:let|const) ("+IDENT+")\\s*=\\s*(.+);$"),
-  set:new RegExp("^("+IDENT+")\\s*=\\s*(.+)$"),
-  jsSet:new RegExp("^("+IDENT+")\\s*=\\s*(.+);$"),
-  inc:new RegExp("^("+IDENT+")\\s*\\+=\\s*(.+)$"),
-  jsInc:new RegExp("^("+IDENT+")\\s*\\+=\\s*(.+);$")};
-const linePattern=(line,language)=>{
- const js=language==="javascript";let m;
+const RX={
+ luauLocal:new RegExp("^local ("+IDENT+")(?:\\s*:\\s*([A-Za-z_][\\w.?]*))?\\s*=\\s*(.+)$"),
+ jsLocal:new RegExp("^(?:let|const) ("+IDENT+")\\s*=\\s*(.+);$"),
+ luauSet:new RegExp("^("+IDENT+")\\s*=\\s*(.+)$"),
+ jsSet:new RegExp("^("+IDENT+")\\s*=\\s*(.+);$"),
+ luauInc:new RegExp("^("+IDENT+")\\s*\\+=\\s*(.+)$"),
+ jsInc:new RegExp("^("+IDENT+")\\s*\\+=\\s*(.+);$")
+};
+function parseCondition(text){
+ const m=/^(.+?)\s+(===|!==|==|!=|~=|>=|<=|>|<)\s+(.+)$/.exec(text.trim());
+ if(!m)return null;
+ return {left:m[1],operator:m[2]==="~="?"!=":m[2]==="==="?"==":m[2]==="!=="?"!=":m[2],right:m[3]};
+}
+function statement(text,language){
+ let m;const js=language==="javascript";
  if(js){
-  if((m=/^console\.log\((.+)\);$/.exec(line)))return ["print",{value:m[1]}];
-  if((m=R.jsLocal.exec(line)))return ["variable",{name:m[1],value:m[2]}];
-  if((m=R.jsInc.exec(line)))return ["increment",{name:m[1],amount:m[2]}];
-  if((m=R.jsSet.exec(line)))return ["set",{name:m[1],value:m[2]}];
-  if((m=/^\/\/\s?(.*)$/.exec(line)))return ["comment",{text:m[1]}];
+  if((m=/^console\.log\((.*)\);$/.exec(text)))return ["print",{value:m[1]}];
+  if((m=RX.jsLocal.exec(text)))return ["variable",{name:m[1],value:m[2]}];
+  if((m=RX.jsInc.exec(text)))return ["increment",{name:m[1],amount:m[2]}];
+  if((m=RX.jsSet.exec(text)))return ["set",{name:m[1],value:m[2]}];
+  if((m=/^return (.+);$/.exec(text)))return ["returnValue",{value:m[1]}];
+  if((m=/^\/\/\s?(.*)$/.exec(text)))return ["comment",{text:m[1]}];
  }else{
-  if((m=/^print\((.+)\)$/.exec(line)))return ["print",{value:m[1]}];
-  if((m=R.local.exec(line)))return ["variable",{name:m[1],type:m[2]||"",value:m[3]}];
-  if((m=R.inc.exec(line)))return ["increment",{name:m[1],amount:m[2]}];
-  if((m=R.set.exec(line)))return ["set",{name:m[1],value:m[2]}];
-  if((m=/^task\.wait\((.+)\)$/.exec(line)))return ["wait",{seconds:m[1]}];
-  if((m=/^--\s?(.*)$/.exec(line)))return ["comment",{text:m[1]}];
+  if((m=/^print\((.*)\)$/.exec(text)))return ["print",{value:m[1]}];
+  if((m=RX.luauLocal.exec(text)))return ["variable",{name:m[1],type:m[2]||"",value:m[3]}];
+  if((m=RX.luauInc.exec(text)))return ["increment",{name:m[1],amount:m[2]}];
+  if((m=RX.luauSet.exec(text)))return ["set",{name:m[1],value:m[2]}];
+  if((m=/^task\.wait\((.+)\)$/.exec(text)))return ["wait",{seconds:m[1]}];
+  if((m=/^return (.+)$/.exec(text)))return ["returnValue",{value:m[1]}];
+  if((m=/^local (\w+) = game:GetService\("([A-Za-z]+)"\)$/.exec(text)))
+   return ["service",{alias:m[1],service:m[2]}];
+  if((m=/^--\s?(.*)$/.exec(text)))return ["comment",{text:m[1]}];
  }
  return null;
-};
+}
+function opening(text,language){
+ let m,cond;const js=language==="javascript";
+ if(js){
+  if((m=/^if \((.+)\) \{$/.exec(text))&&(cond=parseCondition(m[1])))
+   return ["if",cond,"then","}"];
+  if((m=/^while \((.+)\) \{$/.exec(text))&&(cond=parseCondition(m[1])))
+   return ["while",cond,"body","}"];
+  if((m=/^async function ([A-Za-z_]\w*)\(([^()]*)\) \{$/.exec(text)))
+   return ["function",{name:m[1],params:m[2]},"body","}"];
+  if((m=/^for \(let index\d* = 0; index\d* < \((.+)\); index\d*\+\+\) \{$/.exec(text)))
+   return ["repeat",{count:m[1]},"body","}"];
+ }else{
+  if((m=/^if (.+) then$/.exec(text))&&(cond=parseCondition(m[1])))
+   return ["if",cond,"then","end"];
+  if((m=/^while (.+) do$/.exec(text))&&(cond=parseCondition(m[1])))
+   return ["while",cond,"body","end"];
+  if((m=/^local function ([A-Za-z_]\w*)\(([^()]*)\)(?::\s*([A-Za-z_]\w*\??))?$/.exec(text)))
+   return ["function",{name:m[1],params:m[2],returnType:m[3]||""},"body","end"];
+  if((m=/^for index\d* = 1, (.+) do$/.exec(text)))
+   return ["repeat",{count:m[1]},"body","end"];
+  if(text==="Players.PlayerAdded:Connect(function(player)")
+   return ["playerJoined",{},"body","end)"];
+ }
+ return null;
+}
 export function importSourceToBlocks(source,language="luau"){
  if(!["luau","javascript"].includes(language))throw new Error("Unknown language");
- const raw=String(source||"");
- if(raw.length>125_000)throw new Error("Source larger than 125 KB");
- const blocks=[],errors=[],original=raw.replace(/\r\n?/g,"\n").split("\n");
- let inJsMain=false,sawJsMain=false,finishedJs=false;
- for(let index=0;index<original.length;index++){
-  const current=original[index],trimmed=current.trim(),line=index+1;
-  if(!trimmed)continue;
-  if(/^-- Generated by EasyScript|^\/\/ Generated by EasyScript/.test(trimmed))continue;
-  if(language==="javascript"&&trimmed==="async function main() {"&&!sawJsMain){
-   if(index>2){errors.push({line,message:"Unexpected main wrapper position"});}
-   inJsMain=true;sawJsMain=true;continue;
+ const raw=String(source??"");
+ if(raw.length>125000)throw new Error("Source larger than 125 KB");
+ const blocks=[],errors=[],lines=raw.replace(/\r\n?/g,"\n").split("\n"),stack=[];
+ let jsMain=false,jsClosed=false,jsSeen=false,totalBlocks=0;
+ const err=(line,message)=>errors.push({line,message});
+ const make=(kind,fields,line)=>{
+  if(++totalBlocks>500){err(line,"Project has more than 500 blocks");return null;}
+  const block=newBlock(kind);
+  Object.assign(block.fields,fields);
+  return block;
+ };
+ const current=()=>stack.length?stack[stack.length-1].block[stack[stack.length-1].branch]:blocks;
+ for(let i=0;i<lines.length;i++){
+  const rawLine=lines[i],text=rawLine.trim(),line=i+1;
+  if(!text)continue;
+  if(/^-- Generated by EasyScript\b|^\/\/ Generated by EasyScript\b/.test(text))continue;
+  if(language==="javascript"&&text==="async function main() {"&&!jsSeen){
+   if(stack.length){err(line,"main wrapper cannot be nested");continue;}
+   jsMain=true;jsSeen=true;continue;
   }
-  if(language==="javascript"&&trimmed==="}"&&inJsMain){
-   inJsMain=false;finishedJs=true;continue;
+  if(language==="javascript"&&text==="}"&&jsMain&&!stack.length&&rawLine===text){
+   jsMain=false;jsClosed=true;continue;
   }
-  if(language==="javascript"&&finishedJs&&trimmed==="main().catch(console.error);")continue;
-  if(finishedJs||language==="javascript"&&sawJsMain&&!inJsMain){
-   errors.push({line,message:"Unexpected code after main() wrapper"});continue;
+  if(language==="javascript"&&jsClosed&&text==="main().catch(console.error);")continue;
+  if(jsClosed||language==="javascript"&&jsSeen&&!jsMain){err(line,"Unexpected code after JavaScript main");continue;}
+  const indent=rawLine.length-rawLine.trimStart().length;
+  if(rawLine.slice(0,indent).includes("\t")){err(line,"Use four spaces, not tabs, for imported indentation");continue;}
+  const base=language==="javascript"&&jsMain?4:0;
+  if(stack.length){
+   const top=stack[stack.length-1],closingIndent=base+(stack.length-1)*4;
+   const isElse=top.block.type==="if"&&(language==="luau"?text==="else":text==="} else {");
+   if(isElse&&indent===closingIndent){
+    if(top.branch==="else")err(line,"Duplicate else branch");
+    top.branch="else";continue;
+   }
+   if(text===top.close&&indent===closingIndent){
+    stack.pop();continue;
+   }
   }
-  const expectedIndent=language==="javascript"&&inJsMain?4:0;
-  const indent=current.length-current.trimStart().length;
-  if(indent!==expectedIndent){
-   errors.push({line,message:"Nested code or unsupported indentation; preserved original source"});continue;
+  const expected=base+stack.length*4;
+  if(indent!==expected){
+   err(line,"Incorrect nesting or unsupported indentation (expected "+expected+" spaces)");continue;
   }
-  if(/[;\r\n]\s*(?:_G|loadstring|eval)\s*\(/.test(trimmed)){
-   errors.push({line,message:"Unsupported dynamic operation"});continue;
+  const open=opening(text,language);
+  if(open){
+   const [kind,fields,branch,close]=open;
+   const block=make(kind,fields,line);if(!block)continue;
+   current().push(block);
+   if(stack.length>=12)err(line,"Maximum block nesting exceeded");
+   else stack.push({block,branch,close});
+   continue;
   }
-  const parsed=linePattern(trimmed,language);
-  if(!parsed){errors.push({line,message:"Unsupported statement; no blocks imported for this line"});continue;}
-  const [kind,fields]=parsed,block=newBlock(kind);
-  Object.assign(block.fields,fields);blocks.push(block);
+  if(text==="else"||text==="end"||text==="end)"||text==="}"||text==="} else {"){
+   err(line,"Unmatched closing or else statement");continue;
+  }
+  const parsed=statement(text,language);
+  if(!parsed){err(line,"Unsupported statement; no project changes were applied");continue;}
+  const [kind,fields]=parsed;
+  if(kind==="returnValue"&&!stack.some(f=>f.block.type==="function")){
+   err(line,"Return is supported only inside a function");continue;
+  }
+  const block=make(kind,fields,line);
+  if(block)current().push(block);
  }
- if(language==="javascript"&&sawJsMain&&!finishedJs)errors.push({line:original.length,message:"Incomplete JavaScript main wrapper"});
- return {ok:errors.length===0&&blocks.length>0,blocks,errors,language,
-   parsedLines:blocks.length,diagnostic:errors.length?"Conversion blocked: review unsupported lines. Original code was not modified.":"Supported source converted to visual blocks."};
+ if(stack.length)err(lines.length,"Unclosed "+stack[stack.length-1].block.type+" block");
+ if(language==="javascript"&&jsSeen&&!jsClosed)err(lines.length,"Missing closing JavaScript main wrapper");
+ return {ok:errors.length===0&&blocks.length>0,blocks,errors,language,parsedLines:totalBlocks,
+  diagnostic:errors.length?"Conversion blocked: original source remains untouched.":
+   "All supported statements converted into editable nested blocks."};
 }
 export function makeImportedProject(source,language,title="Imported source"){
- const r=importSourceToBlocks(source,language);
- if(!r.ok)throw new Error(r.errors[0]?.message||"No supported source statements");
- return {schema:1,title:String(title).slice(0,80),language,blocks:r.blocks};
+ const result=importSourceToBlocks(source,language);
+ if(!result.ok)throw new Error(result.errors[0]?.message||"No supported source statements");
+ return {schema:1,title:String(title).slice(0,80),language,blocks:result.blocks};
 }
