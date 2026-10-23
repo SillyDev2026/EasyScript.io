@@ -7,7 +7,12 @@ const OPERATORS={
   greater:{luau:">",javascript:">",type:"boolean",inputs:"number"},
   equal:{luau:"==",javascript:"===",type:"boolean",inputs:"any"},
   and:{luau:"and",javascript:"&&",type:"boolean",inputs:"boolean"},
-  or:{luau:"or",javascript:"||",type:"boolean",inputs:"boolean"}
+  or:{luau:"or",javascript:"||",type:"boolean",inputs:"boolean"},
+  less:{luau:"<",javascript:"<",type:"boolean",inputs:"number"},
+  greaterEqual:{luau:">=",javascript:">=",type:"boolean",inputs:"number"},
+  lessEqual:{luau:"<=",javascript:"<=",type:"boolean",inputs:"number"},
+  notEqual:{luau:"~=",javascript:"!==",type:"boolean",inputs:"any"},
+  modulo:{luau:"%",javascript:"%",type:"number",inputs:"number"}
 };
 export const EXPRESSION_KINDS=[
   {value:"raw",name:"Existing expression",type:"any"},
