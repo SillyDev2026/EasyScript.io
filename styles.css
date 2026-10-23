@@ -327,3 +327,15 @@ html[data-theme="light"] .workspace-name-label input{background:#f9fbff;color:#2
  .file-dialog-actions .btn{flex:1;min-width:130px}
 }
 @media(prefers-reduced-motion:reduce){.file-tab{scroll-behavior:auto}}
+
+/* v0.5 reusable block snippets and collapsed cards */
+.block.block-collapsed>.block-fields,.block.block-collapsed>.block-branch{display:none}
+.block.block-collapsed{box-shadow:inset 0 0 0 1px #4a658c}
+.block.block-collapsed .block-heading strong::after{content:"  · collapsed";font-size:10px;font-weight:400;color:#98aed0}
+.block-actions{display:flex;justify-content:flex-end;gap:3px;flex-wrap:wrap}
+.block-actions .tiny-btn{flex-shrink:0;min-width:25px;padding:5px 6px}
+.workspace-bottom{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+@media(max-width:760px){
+ .block-actions .tiny-btn{min-height:32px;min-width:30px}
+ .workspace-bottom .btn{flex:1;min-width:0}
+}
