@@ -1,4 +1,47 @@
-# EasyScript.io v1.2.0 — Luau + JavaScript expansion
+# EasyScript.io v1.3.0 — Ultra Developer Suite + Roblox Studio Importer
+
+**Luau-first visual scripting with 172 built-in block types, nine more local Ultra Suite workflows and a Studio-side importer.**
+
+[Launch EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [Repository](https://github.com/SillyDev2026/EasyScript.io)
+
+## New v1.3 Ultra workflows
+
+1. **Static Luau analyzer:** identifies basic declaration problems, duplicate names, warnings about remote inputs and loop risks (not a real Luau type checker).
+2. **Offline Roblox API lookup:** searchable curated class/method reference, not a complete live API dump.
+3. **Data schema/module generator:** produces a typed-default ModuleScript and a field-by-field migration helper, suitable as a starting point.
+4. **Workspace readiness review:** combines file diagnostics, missing/circular ModuleScripts and common source placeholders without running Roblox Studio.
+5. **Workspace merge:** append scripts from a second workspace JSON while avoiding filename collisions and respecting the 24-file cap.
+6. **Parallel Luau adviser:** highlights potentially unsafe engine/data operations and provides an Actor messaging example; no automatic parallelization.
+7. **Roblox Studio source importer:** an actual **manual, one-way** Studio plugin at [roblox/EasyScriptImporter.plugin.lua](roblox/EasyScriptImporter.plugin.lua). It previews a source-manifest JSON and imports Roblox Scripts and LocalScripts **disabled by default** for code review. No live network synchronization.
+8. **Custom block SDK:** create and persist up to 30 declarative local blocks with field placeholders and separate Luau/JavaScript output templates. No arbitrary JavaScript execution in the browser.
+9. **AI prompt pack:** prepare an optional source-review prompt for manual copy. There is **no hosted AI/model request**.
+
+Custom blocks now travel in the **workspace JSON** and **ZIP exports**. The site continues to work without a backend, login, API key, CDN or cloud service.
+
+### How to use the Roblox Studio importer
+
+- In EasyScript select **Manage files → Export source manifest** (not the workspace backup JSON).
+- In Roblox Studio install or create a plugin Script using the code in [EasyScriptImporter.plugin.lua](roblox/EasyScriptImporter.plugin.lua), following Roblox Studio's plugin authoring instructions.
+- Open the EasyScript plugin, paste the complete source-manifest JSON, click **Preview**, and then **Import disabled scripts**.
+- The importer places server Scripts under ServerScriptService, LocalScripts under StarterPlayerScripts and ModuleScripts under ReplicatedStorage. Review folder layout, security, remote authorization, API permissions and every generated source file before enabling anything.
+
+### Roadmap constraints: not all 26 Ultra features are complete
+
+The **remaining high-complexity items** include a true drag-to-connect Scratch/Blockly block canvas, reliable full bidirectional Luau parsing, a connected live Studio debugger/profiler, cloud GitHub OAuth, online collaborative conflict resolution, authenticated backup services and hosted AI. They require dedicated services or significantly larger parsers, and are **not represented as finished**.
+
+### Safety and limitations
+
+- Studio importer source text can create arbitrary Roblox scripts. Import only projects you trust. Scripts/LocalScripts are initially disabled, but ModuleScripts may run when required by another script.
+- Dynamic Luau raw expressions, API calls and server/client boundaries still require testing in Roblox Studio.
+- Static analysis, migration, API reference and parallel adviser do not run code or guarantee runtime performance, security or semantic validity.
+- A workspace JSON backup is only as safe as the local files you save; clearing browser storage can erase saved projects.
+- The custom block SDK compiles templates to source; it does not execute them in the browser. Always inspect exported source before importing to Studio.
+
+---
+
+## Previous v1.2 improvements
+
+
 
 **A responsive, browser-only visual scripting editor for Roblox Luau and JavaScript.**
 
