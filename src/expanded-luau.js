@@ -26,17 +26,20 @@ stmt("tagAdd","Add CollectionService tag","Instances",{target:"workspace.Part",t
 stmt("tagRemove","Remove CollectionService tag","Instances",{target:"workspace.Part",tag:"Interactable"},f=>'game:GetService("CollectionService"):RemoveTag('+e(f,"target")+", "+q(f,"tag")+")");
 stmt("collisionGroupSet","Set collision group","Physics",{target:"workspace.Part",group:"Default"},f=>e(f,"target")+".CollisionGroup = "+q(f,"group"));
 stmt("humanoidMoveTo","Humanoid MoveTo","Players",{humanoid:"humanoid",position:"Vector3.new(0, 5, 0)"},f=>e(f,"humanoid")+":MoveTo("+e(f,"position")+")");
-register("pathWaypoints","Pathfinding waypoint loop","Physics",{humanoid:"humanoid",from:"character.PrimaryPart.Position",to:"workspace.Goal.Position"},(f,s,emit,b)=>[
- s+'local path = game:GetService("PathfindingService"):CreatePath()',
- s+"local pathOk = pcall(function()",
- s+"    path:ComputeAsync("+e(f,"from")+", "+e(f,"to")+")",
- s+"end)",
- s+"if pathOk and path.Status == Enum.PathStatus.Success then",
- s+"    for _, waypoint in ipairs(path:GetWaypoints()) do",
- s+"        "+e(f,"humanoid")+":MoveTo(waypoint.Position)",
- s+"        "+e(f,"humanoid")+".MoveToFinished:Wait()",
- ...emit(b.body,s.length/4+2),s+"    end",s+"end"
-],["body"]);
+register("pathWaypoints","Pathfinding waypoint loop","Physics",{humanoid:"humanoid",from:"character.PrimaryPart.Position",to:"workspace.Goal.Position"},(f,s,emit,b,ctx)=>{
+ const path=ctx.reserve("path"),ok=ctx.reserve("pathOk"),waypoint=ctx.reserve("waypoint");
+ return [
+  s+"local "+path+' = game:GetService("PathfindingService"):CreatePath()',
+  s+"local "+ok+" = pcall(function()",
+  s+"    "+path+":ComputeAsync("+e(f,"from")+", "+e(f,"to")+")",
+  s+"end)",
+  s+"if "+ok+" and "+path+".Status == Enum.PathStatus.Success then",
+  s+"    for _, "+waypoint+" in ipairs("+path+":GetWaypoints()) do",
+  s+"        "+e(f,"humanoid")+":MoveTo("+waypoint+".Position)",
+  s+"        "+e(f,"humanoid")+".MoveToFinished:Wait()",
+  ...emit(b.body,s.length/4+2),s+"    end",s+"end"
+ ];
+},["body"]);
 out("bindableNew","Create BindableEvent","Events",{name:"signal",parent:"script"},
  f=>'Instance.new("BindableEvent", '+e(f,"parent")+")");
 stmt("bindableFire","Fire BindableEvent","Events",{target:"script.Parent.Signal",value:"true"},f=>e(f,"target")+":Fire("+e(f,"value")+")");
@@ -50,13 +53,17 @@ register("remoteServerFunction","RemoteFunction server handler","Networking",{re
 register("remoteClientFunction","RemoteFunction client handler","Networking",{remote:"game.ReplicatedStorage.Request"},(f,s,emit,b)=>[
  s+e(f,"remote")+".OnClientInvoke = function(data)",...emit(b.body,s.length/4+1),s+"end"
 ],["body"]);
-register("datastoreUpdate","DataStore UpdateAsync (server)","Data",{store:"playerDataStore",key:"tostring(player.UserId)",value:"newData"},(f,s)=>[
- s+"local updateOk, updateResult = pcall(function()",
- s+"    return "+e(f,"store")+":UpdateAsync("+e(f,"key")+", function(previous)",
- s+"        return "+e(f,"value")+" -- no yields in transform",
- s+"    end)",s+"end)",
- s+'if not updateOk then warn("DataStore update failed:", updateResult) end'
-]);
+register("datastoreUpdate","DataStore UpdateAsync (server)","Data",{storeName:"PlayerDataV1",key:"tostring(player.UserId)",value:"newData"},(f,s,emit,b,ctx)=>{
+ const store=ctx.stores.get(f.storeName)||'game:GetService("DataStoreService"):GetDataStore('+q(f,"storeName")+')';
+ const ok=ctx.reserve("updateOk"),result=ctx.reserve("updateResult");
+ return [
+  s+"local "+ok+", "+result+" = pcall(function()",
+  s+"    return "+store+":UpdateAsync("+e(f,"key")+", function(previous)",
+  s+"        return "+e(f,"value")+" -- no yields in transform",
+  s+"    end)",s+"end)",
+  s+'if not '+ok+' then warn("DataStore update failed:", '+result+") end"
+ ];
+});
 out("memoryQueue","MemoryStore queue","Data",{name:"queue",queueName:"MatchQueue",timeout:"30"},
  f=>'game:GetService("MemoryStoreService"):GetQueue('+q(f,"queueName")+", "+e(f,"timeout")+")");
 out("memorySortedMap","MemoryStore sorted map","Data",{name:"rankings",mapName:"Rankings"},
@@ -78,11 +85,11 @@ const validEnum={
  style:new Set(["Linear","Sine","Back","Quad","Quart","Quint","Bounce","Elastic","Exponential","Circular","Cubic"]),
  direction:new Set(["In","Out","InOut"])
 };
-export function expandedLuauCode(block,language,level,emit){
+export function expandedLuauCode(block,language,level,emit,ctx={}){
  const entry=defs[block.type];if(!entry)return null;
  const s="    ".repeat(level);
  if(language!=="luau")return [s+"// Roblox-only: "+entry.name+" (switch to Luau)"];
- return entry.build(block.fields,s,emit,block);
+ return entry.build(block.fields,s,emit,block,ctx);
 }
 export function expandedLuauDiagnostics(block,language){
  const entry=defs[block.type];if(!entry)return [];
