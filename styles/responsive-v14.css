@@ -106,7 +106,7 @@ body {width:100%;min-width:0;max-width:100%;overflow-x:clip}
   box-sizing:border-box;min-width:0;max-width:100%;width:100%
 }
 .studio-toolbar-controls,.studio-toolbar-bottom,.studio-toolbar-top {min-width:0;max-width:100%}
-.studio-toolbar-bottom {display:grid;grid-template-columns:auto auto auto auto auto minmax(170px,1fr) auto;gap:clamp(8px,1vw,16px);align-items:center}
+.studio-toolbar-bottom {display:grid;grid-template-columns:auto auto auto auto auto auto minmax(170px,1fr) auto;gap:clamp(8px,1vw,16px);align-items:center}
 .studio-size-control,.studio-scale-control,.studio-editor-share {display:flex;align-items:center;gap:7px;min-width:0;color:#a4b9db;font-size:clamp(11px,calc(11px * var(--ui-scale)),14px)}
 .studio-size-control input,.studio-scale-control input {width:clamp(70px,7vw,132px);min-width:0;accent-color:#80a9ff}
 .studio-size-control output,.studio-scale-control output,.studio-editor-share output {font-variant-numeric:tabular-nums;min-width:33px}
