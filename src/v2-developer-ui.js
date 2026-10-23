@@ -2,6 +2,7 @@ import {generate,lint,traverse} from "./engine.js";
 import {importSourceToBlocks} from "./v2-code-bridge.js";
 import {reviewWorkspaceChanges,createWorkspacePatch,inspectWorkspacePatch,applyWorkspacePatch,workspacePatchFileName} from "./v2-workspace-patch.js";
 import {socketTreeSummary} from "./v2-expressions.js";
+import {robloxProfilerModule,robloxProfilerExample} from "./v2-profiler.js";
 const make=(tag,cls="",value)=>{
  const element=document.createElement(tag);
  if(cls)element.className=cls;
@@ -12,7 +13,7 @@ const addButton=(text,onClick,cls="btn compact ghost")=>{
  const btn=make("button",cls,text);btn.type="button";btn.addEventListener("click",onClick);return btn;
 };
 function download(filename,content){
- const blob=new Blob([content],{type:"application/json"});
+ const blob=new Blob([content],{type:filename.endsWith(".json")?"application/json":"text/plain;charset=utf-8"});
  const url=URL.createObjectURL(blob),a=make("a");
  a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1500);
@@ -133,6 +134,16 @@ export function mountV2Studio({getProject,getWorkspace,commitNow,updateWorkspace
   }
   area.append(listing);
  }
+ function profiler(){
+  line("Optional Roblox Studio instrumentation: download a Profiler ModuleScript, require it from a Script, and wrap the exact function you want to measure. Only Studio/server execution records timings; this site never measures your game.");
+  const buttons=make("div","v2-dev-actions"),preview=make("pre","v2-dev-preview");
+  let selected="module";
+  const redraw=()=>{preview.textContent=selected==="module"?robloxProfilerModule():robloxProfilerExample();};
+  buttons.append(addButton("Profiler ModuleScript",()=>{selected="module";redraw();}),
+    addButton("Example server Script",()=>{selected="example";redraw();}),
+    addButton("Download Luau",()=>download(selected==="module"?"Profiler.luau":"ProfilerExample.luau",preview.textContent),"btn primary"));
+  area.append(buttons,preview);redraw();
+ }
  function overview(){
   const project=getProject(),diagnostics=lint(project),workspace=getWorkspace();
   line("Static preflight. This does not run Roblox Studio, a Luau compiler, or live security checks.");
@@ -154,7 +165,8 @@ export function mountV2Studio({getProject,getWorkspace,commitNow,updateWorkspace
  }
  const views=[
   ["source","Code → Blocks",sourceImport],["patch","Offline patches",workspacePatch],
-  ["sockets","Expression graphs",sockets],["preflight","Project preflight",overview]
+  ["sockets","Expression graphs",sockets],["preflight","Project preflight",overview],
+  ["profiler","Studio profiler",profiler]
  ];
  function render(){
   area.replaceChildren();area.hidden=!active;
