@@ -283,3 +283,47 @@ html[data-theme="light"] .favorite-toggle.is-favorite{background:#fff0c4;color:#
 html[data-theme="light"] .studio-toolbar .btn.active,html[data-theme="light"] .ultra-actions .btn.active{background:#315cb8;color:#fff}
 html[data-theme="light"] .footer,html[data-theme="light"] .panel-note,html[data-theme="light"] .workspace-bottom{color:#516984}
 html[data-theme="light"] .structure-node:hover,html[data-theme="light"] .jump-result:hover{background:#dbe9ff}
+
+/* EasyScript v0.5 file workspace — all widths adapt to viewport. */
+.file-tabbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 clamp(10px,1vw,16px);padding:7px 8px;border:1px solid #2d4162;border-radius:13px;background:#111f34;min-width:0}
+.file-tabs{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:thin;padding-block:2px;scroll-snap-type:x proximity}
+.file-tab{flex:0 0 auto;max-width:clamp(130px,17vw,270px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid #324968;border-radius:9px;background:#16253e;color:#aabdd8;font-size:12px;font-weight:650;padding:10px 12px;scroll-snap-align:start;cursor:pointer}
+.file-tab:hover{background:#24395a;color:#f2f6ff}
+.file-tab.active{background:#324f8d;color:#fff;border-color:#7ca7ff;box-shadow:inset 0 -2px 0 #9dcbff}
+.file-actions{display:flex;flex:0 0 auto;gap:6px}
+.file-actions .btn{padding:9px 10px;font-size:11px}
+.file-dialog{max-width:min(92vw,840px);width:100%;border-radius:17px}
+.file-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.file-dialog-heading h2{font-size:clamp(18px,1.5vw,24px)}
+.workspace-name-label{display:flex;flex-direction:column;gap:8px;color:#b4c5df;font-size:12px;font-weight:650;margin:10px 0}
+.workspace-name-label input{width:100%;padding:11px 12px;background:#0e1a2c;border:1px solid #415674;border-radius:9px;color:#f0f6ff}
+.file-manager-list{display:flex;flex-direction:column;gap:8px;margin-top:15px;max-height:48dvh;overflow-y:auto;overscroll-behavior:contain}
+.file-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#172741;border:1px solid #324969;padding:11px 12px;border-radius:11px}
+.file-info{min-width:0;display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere}
+.file-info strong{font-size:13px;color:#e5edff}
+.file-info span{font-size:11px;color:#93abce}
+.file-row-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.file-row-actions .btn{font-size:11px;padding:7px 9px}
+.file-dialog-actions{border-top:1px solid #324563;padding-top:15px;margin-top:15px;display:flex;gap:8px;flex-wrap:wrap}
+.file-dialog-actions .btn{font-size:11px}
+html[data-theme="light"] .file-tabbar{background:#fff;border-color:#cbd8e9}
+html[data-theme="light"] .file-tab{background:#edf2fc;border-color:#cdd8eb;color:#324c6d}
+html[data-theme="light"] .file-tab.active{background:#3660b1;color:#fff;border-color:#6d97dd}
+html[data-theme="light"] .file-dialog{background:#fff;color:#243a59;border-color:#cedcee}
+html[data-theme="light"] .file-row{background:#f2f6fc;border-color:#d3dfec}
+html[data-theme="light"] .file-info strong{color:#1a3456}
+html[data-theme="light"] .file-info span,html[data-theme="light"] .workspace-name-label{color:#556d8b}
+html[data-theme="light"] .workspace-name-label input{background:#f9fbff;color:#213553;border-color:#c5d7ed}
+@media(max-width:760px){
+ .file-tabbar{align-items:stretch;flex-direction:column;padding:8px}
+ .file-tabs{width:100%;overflow-x:auto;min-height:42px}
+ .file-tab{max-width:clamp(125px,46vw,220px);padding:9px 12px}
+ .file-actions{width:100%;justify-content:space-between}
+ .file-actions .btn{flex:1;min-width:0}
+ .file-row{flex-direction:column;align-items:stretch}
+ .file-row-actions{justify-content:flex-start}
+ .file-row-actions .btn{flex:1}
+ .file-dialog{max-width:95vw;padding:14px}
+ .file-dialog-actions .btn{flex:1;min-width:130px}
+}
+@media(prefers-reduced-motion:reduce){.file-tab{scroll-behavior:auto}}
