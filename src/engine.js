@@ -112,6 +112,8 @@ export function sanitizeProject(raw) {
       const def=DEFINITIONS[b.type];const fields={};
       for(const field of Object.keys(def.fields))fields[field]=String(b.fields?.[field]??def.fields[field]).slice(0,400);
       const out={id:"import_"+(++sequence),type:b.type,fields};
+      if(b.disabled===true)out.disabled=true;
+      if(typeof b.note==="string"&&b.note.trim())out.note=b.note.slice(0,300);
       for(const branch of def.branches||[])out[branch]=clean(b[branch],depth+1);
       return [out];
     });
@@ -203,6 +205,10 @@ export function generate(project) {
     if(!blocks.length){lines.push(space(level)+(js?"// Add blocks here":"-- Add blocks here"));return;}
     for(let index=0;index<blocks.length;index++) {
       const b=blocks[index],f=b.fields,s=space(level);
+      if(b.disabled===true){
+        lines.push(s+(js?"// ":"-- ")+"Disabled block: "+DEFINITIONS[b.type].name);
+        continue;
+      }
       if(!js&&b.type==="moduleReturn"&&(level!==0||index!==blocks.length-1)){
         lines.push(s+"-- ModuleScript return must be the final top-level block.");
         continue;
@@ -322,6 +328,7 @@ export function lint(project){
   function checkExtended(list,context={inLoop:false,inFunction:false,hasPlayer:false,depth:0}){
     for(let index=0;index<list.length;index++){
       const b=list[index];
+      if(b.disabled===true)continue;
       if(b.type==="moduleReturn"&&project.language==="luau"&&(index!==list.length-1||context.depth>0)){
         problems.push({id:b.id,severity:"error",message:"ModuleScript return must be the final top-level block."});
       }
@@ -352,6 +359,7 @@ export function lint(project){
   });
   traverse(project.blocks,b=>{
     const f=b.fields;
+    if(b.disabled===true)return;
     if(b.type.startsWith("global")&&["globalWrite","globalRead","globalIncrease","globalDelete"].includes(b.type)){
       if((needsPlayersAlias&&f.key==="Players")||(needsStoreAlias&&f.key==="DataStoreService")){
         problems.push({id:b.id,severity:"error",message:"Script local "+f.key+" conflicts with an automatically generated Roblox service variable. Rename it."});
