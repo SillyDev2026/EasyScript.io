@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {DEFINITIONS,newBlock,projectTemplate,sanitizeProject,addBlock,findLocation,traverse,generate,lint,simulate} from "../src/engine.js";
 
 test("block definitions contain supported primitives",()=>{
-  assert.equal(Object.keys(DEFINITIONS).length,36);
+  assert.equal(Object.keys(DEFINITIONS).length,129);
   assert.ok(DEFINITIONS.if.branches.includes("else"));
 });
 test("starter template generates valid-looking nested Luau",()=>{
