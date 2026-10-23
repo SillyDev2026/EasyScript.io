@@ -1,5 +1,6 @@
 import {activeFile,chooseFile,addFile,removeFile,renameFile,duplicateFile,validateWorkspace,createWorkspace,bundleSources} from "./workspace.js";
 import {generate} from "./engine.js";
+import {copyCodeWithFallback,createCopyFallback} from "./code-copy.js";
 
 const el=(tag,className="",text)=>{
   const node=document.createElement(tag);
@@ -23,6 +24,7 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
   addButton.type="button";manageButton.type="button";actions.append(addButton,manageButton);
   bar.append(tabs,actions);
   document.querySelector(".project-bar").after(bar);
+  const manualCopy=createCopyFallback();
   const dialog=el("dialog","file-dialog");
   const heading=el("div","file-dialog-heading");
   heading.append(el("h2","","Workspace Explorer"));
@@ -133,8 +135,7 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
   copySourcesButton.addEventListener("click",async()=>{
     commitNow();const ws=getWorkspace();
     const output=bundleSources(ws).map(file=>"======== "+file.filename+" ========\n"+generate(file.project)).join("\n");
-    try{await navigator.clipboard.writeText(output);notify("All generated code copied");}
-    catch{notify("Clipboard unavailable");}
+    await copyCodeWithFallback(output,notify,manualCopy);
   });
   document.addEventListener("keydown",event=>{
     if(!event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
