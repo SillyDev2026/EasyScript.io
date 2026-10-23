@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="description" content="EasyScript helps you build real code by combining visual, beginner-friendly scripting blocks." />
+  <title>EasyScript — Build scripts visually</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="header">
+      <div class="header-brand">
+        <div class="logo" aria-hidden="true"><span>&lt;</span><span class="logo-spark">◆</span><span>/&gt;</span></div>
+        <div class="brand-words"><strong>EasyScript<span class="brand-dot">.io</span></strong><span>Visual scripting studio</span></div>
+        <span class="version">ALPHA 0.2</span>
+      </div>
+      <div class="header-actions">
+        <span id="saveStatus" class="saved" aria-live="polite"><span class="status-light"></span> Saved locally</span>
+        <button id="importBtn" class="btn ghost">↥ <span>Import</span></button>
+        <button id="exportProjectBtn" class="btn ghost">⇩ <span>Project</span></button>
+        <button id="exportCodeBtn" class="btn primary">↧ <span>Export code</span></button>
+      </div>
+    </header>
+
+    <section class="project-bar" aria-label="Project controls">
+      <div class="project-input-wrap">
+        <span class="project-label">PROJECT</span>
+        <input id="projectTitle" aria-label="Project title" maxlength="80" spellcheck="false" />
+        <span class="edit-icon">✎</span>
+      </div>
+      <div class="project-controls">
+        <label class="inline-label" for="language">Language</label>
+        <select id="language" aria-label="Code language"><option value="luau">Luau · Roblox</option><option value="javascript">JavaScript</option></select>
+        <label class="inline-label" for="template">Template</label>
+        <select id="template" aria-label="Project template"><option value="starter">Purchase check</option><option value="counter">Coin counter</option><option value="functions">Function demo</option><option value="blank">Blank project</option></select>
+        <button id="loadTemplateBtn" class="btn compact">Load</button>
+      </div>
+    </section>
+
+    <main class="layout">
+      <aside class="panel palette-panel" aria-label="Block library">
+        <div class="panel-top"><div><div class="eyebrow">01 / LIBRARY</div><h2>Building blocks</h2></div><span class="panel-mini-icon">▦</span></div>
+        <p class="panel-note">Tap a block to add it, or drag it into the workspace.</p>
+        <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="paletteSearch" type="search" placeholder="Find a block..." aria-label="Search blocks" /></div>
+        <div id="palette" class="palette-groups"></div>
+        <div class="palette-footer"><div class="help-icon">?</div><div><b>New to scripting?</b><span>Build with blocks. Learn from real code.</span></div></div>
+      </aside>
+
+      <section class="panel editor-panel" aria-label="Visual editor">
+        <div class="panel-top editor-top">
+          <div><div class="eyebrow">02 / WORKSPACE</div><h2>Visual editor <span id="blockCount" class="count-pill">0 blocks</span></h2></div>
+          <div class="workspace-actions">
+            <button class="icon-btn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button>
+            <button class="icon-btn" id="redoBtn" title="Redo (Ctrl+Y)" aria-label="Redo">↷</button>
+            <button class="icon-btn danger-text" id="clearBtn" title="Clear workspace" aria-label="Clear workspace">⌫</button>
+          </div>
+        </div>
+        <div class="workspace-intro"><span class="indicator">●</span> Your script runs from top to bottom. Add nested steps inside loops, conditions and functions.</div>
+        <div id="workspace" class="workspace"></div>
+        <div class="workspace-bottom"><button id="addBlockBtn" class="btn add-main">＋ Add a block</button><span>Tip: use ↑ ↓ to move blocks on mobile</span></div>
+      </section>
+
+      <aside class="panel result-panel" aria-label="Generated code and diagnostics">
+        <div class="panel-top"><div><div class="eyebrow">03 / OUTPUT</div><h2>Generated code</h2></div><span id="languageBadge" class="lang-badge">LUAU</span></div>
+        <div class="tabs" role="tablist" aria-label="Results"><button role="tab" aria-selected="true" class="tab active" id="codeTab">Code</button><button role="tab" aria-selected="false" class="tab" id="diagnosticsTab">Diagnostics <span id="issueCount">0</span></button><button role="tab" aria-selected="false" class="tab" id="consoleTab">Console</button></div>
+        <div id="codePane" class="result-content" role="tabpanel"><div class="code-toolbar"><span id="codeFilename">script.luau</span><button id="copyCodeBtn" class="mini-btn">⧉ Copy</button></div><pre class="code-scroller"><code id="codeOutput"></code></pre></div>
+        <div id="diagnosticsPane" class="result-content hidden" role="tabpanel" aria-live="polite"></div>
+        <div id="consolePane" class="result-content hidden" role="tabpanel"><div id="consoleOutput" class="console-lines"><span class="dim">Select “Simulate” to preview simple block logic without executing your script.</span></div></div>
+        <div class="result-bottom"><button id="simulateBtn" class="btn run-btn">▶ Simulate</button><p>Safe logic preview · No Roblox engine or external code execution</p></div>
+      </aside>
+    </main>
+    <footer class="footer"><span><span class="status-light"></span> EasyScript visual engine ready</span><span>Open-source visual editor · No account needed</span><span id="footerStats">0 blocks · Luau</span></footer>
+  </div>
+
+  <input type="file" id="filePicker" accept=".json,application/json" hidden />
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="addDialog" class="add-dialog"><form method="dialog"><div class="modal-header"><div><div class="eyebrow">ADD BLOCK</div><h2>Choose a step</h2></div><button class="icon-btn" value="cancel" aria-label="Close">✕</button></div><p>Tap a block to insert it at the selected location.</p><div id="modalChoices" class="modal-choices"></div></form></dialog>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
