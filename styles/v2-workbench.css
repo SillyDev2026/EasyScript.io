@@ -4,7 +4,7 @@
 .v2-dev-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .v2-dev-head h2{margin:0;font-size:clamp(17px,1.5vw,23px);color:#e7f3ff}
 .v2-dev-head p,.v2-dev-description{color:#9db8dc;font-size:12px;line-height:1.55}
-.v2-dev-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.v2-dev-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:14px}
 .v2-dev-tabs .btn{min-width:0;min-height:43px;white-space:normal;padding:8px;font-size:12px;line-height:1.4}
 .v2-dev-tabs .btn.active{background:#355ca9;color:#fff;border-color:#86b1ff}
 .v2-dev-body{min-width:0;max-width:100%;border-top:1px solid #3d5070;margin-top:16px;padding-top:14px}
