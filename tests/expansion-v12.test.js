@@ -6,10 +6,10 @@ import {EXPANDED_LUAU_DEFINITIONS} from "../src/expanded-luau.js";
 import {allBlocks,performBulk,normalizeSelection,setBlockNote,renameVariable,saveSnippet,
  listSnippets,insertSnippet,toggleBookmark,listBookmarks,diagnosticSummary,projectSourceMinimap} from "../src/editor-ops.js";
 const memory=()=>{const entries=new Map();return {getItem:k=>entries.get(k)||null,setItem:(k,v)=>entries.set(k,String(v))};};
-test("v1.2 contains 26 more Roblox blocks and 157 total",()=>{
+test("v1.2 contains 26 more Roblox blocks and 172 total",()=>{
  assert.equal(VERSION,"1.2.0");
  assert.equal(Object.keys(EXPANDED_LUAU_DEFINITIONS).length,26);
- assert.equal(Object.keys(DEFINITIONS).length,157);
+ assert.equal(Object.keys(DEFINITIONS).length,172);
 });
 test("every new API block emits concrete Luau or clear JavaScript-only comments",()=>{
  for(const type of Object.keys(EXPANDED_LUAU_DEFINITIONS)){
