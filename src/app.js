@@ -474,7 +474,7 @@ function bindActions(){
     if(project.blocks.length&&!confirm("Load a template? Your current blocks will be replaced."))return;
     const language=project.language;
     mutate(()=>{project=projectTemplate($("template").value);
-      if(!["leaderstats","touch","remote"].includes($("template").value))project.language=language;
+      if(!["leaderstats","touch","remote","globalCounter","uiButton","doorPrompt","playerData","remoteReply","vectors","jsPage","jsStorage","jsRequest"].includes($("template").value))project.language=language;
     });
     notify("Template loaded. Customize each block to get started.");
   });
