@@ -1,6 +1,7 @@
 import {activeFile,chooseFile,addFile,removeFile,renameFile,duplicateFile,validateWorkspace,createWorkspace,bundleSources} from "./workspace.js";
 import {generate} from "./engine.js";
 import {copyCodeWithFallback,createCopyFallback} from "./code-copy.js";
+import {mountWorkspaceV1} from "./v1-workspace-ui.js";
 
 const el=(tag,className="",text)=>{
   const node=document.createElement(tag);
@@ -137,6 +138,7 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
     const output=bundleSources(ws).map(file=>"======== "+file.filename+" ========\n"+generate(file.project)).join("\n");
     await copyCodeWithFallback(output,notify,manualCopy);
   });
+  mountWorkspaceV1({getWorkspace,updateWorkspace,switchFile,notify,commitNow,dialog,bottom});
   document.addEventListener("keydown",event=>{
     if(!event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
     if(event.target instanceof HTMLInputElement||event.target instanceof HTMLTextAreaElement)return;
