@@ -9,7 +9,11 @@ const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
 const icons = {print:"▣",variable:"▤",set:"↗",if:"◇",repeat:"⟳",wait:"◷",comment:"≡",function:"ƒ",call:"↳",
   increment:"+1",while:"∞",service:"◈",playerJoined:"♟",partTouched:"◉",remoteReceived:"⇢",
-  leaderstat:"★",setProperty:"◆",createPart:"⬡"};
+  leaderstat:"★",setProperty:"◆",createPart:"⬡",
+  random:"⚄",clamp:"⇥",concat:"Aa",length:"≡",array:"[]",append:"+",removeAt:"−",
+  listSize:"#",each:"⋮",forRange:"1…",returnValue:"↰",breakLoop:"■",
+  playerLeaving:"↪",characterAdded:"♟",setAttribute:"⚙",getAttribute:"⇠",
+  destroyInstance:"✕",spawnTask:"⚡"};
 let project = load();
 let workspace = loadWorkspace(localStorage,project);
 project = activeFile(workspace).project;
