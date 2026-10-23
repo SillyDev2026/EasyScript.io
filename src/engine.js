@@ -137,6 +137,12 @@ export function generate(project) {
     return /^[A-Z0-9_]+$/.test(clean)?clean.toLowerCase():clean.charAt(0).toLowerCase()+clean.slice(1);
   };
   const preambleUsed=new Set(["Players","DataStoreService"]);
+  // Generated service aliases must not shadow names declared by user blocks.
+  traverse(project.blocks,b=>{
+    if(["variable","array","function","requireModule","globalRead"].includes(b.type)&&b.fields?.name)
+      preambleUsed.add(String(b.fields.name));
+    if(b.type.startsWith("global")&&b.fields?.key)preambleUsed.add(String(b.fields.key));
+  });
   const uniqueGlobal=(base,used)=>{
     let name=base,n=2;while(used.has(name))name=base+(n++);
     used.add(name);return name;
@@ -329,8 +335,18 @@ export function lint(project){
     }
   }
   checkExtended(project.blocks);
+  let needsPlayersAlias=false,needsStoreAlias=false;
+  traverse(project.blocks,b=>{
+    if(["playerJoined","playerLeaving","leaderstat"].includes(b.type))needsPlayersAlias=true;
+    if(["datastoreGet","datastoreSet"].includes(b.type))needsStoreAlias=true;
+  });
   traverse(project.blocks,b=>{
     const f=b.fields;
+    if(b.type.startsWith("global")&&["globalWrite","globalRead","globalIncrease","globalDelete"].includes(b.type)){
+      if((needsPlayersAlias&&f.key==="Players")||(needsStoreAlias&&f.key==="DataStoreService")){
+        problems.push({id:b.id,severity:"error",message:"Script local "+f.key+" conflicts with an automatically generated Roblox service variable. Rename it."});
+      }
+    }
     const issue=(message,severity="error")=>problems.push({id:b.id,message,severity});
     if(["variable","set","increment","function","call"].includes(b.type)&&!validName(f.name))issue("Invalid identifier: "+f.name);
     if(b.type==="service"&&!validName(f.alias))issue("Invalid service alias: "+f.alias);
