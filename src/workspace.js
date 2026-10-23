@@ -64,7 +64,12 @@ export function activeFile(workspace){
   return workspace.files.find(f=>f.id===workspace.activeId)||workspace.files[0];
 }
 export function commitActive(workspace,project){
-  activeFile(workspace).project=project;
+  const file=activeFile(workspace);
+  file.project=project;
+  if(project.language==="javascript"&&file.kind!=="JavaScript")file.kind="JavaScript";
+  if(project.language==="luau"&&file.kind==="JavaScript")file.kind="Script";
+  const requested=validName(file.name,project.language);
+  file.name=uniqueName(workspace.files,requested,file.id);
   return workspace;
 }
 export function addFile(workspace,name,kind="Script",template="blank"){
