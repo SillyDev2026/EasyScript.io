@@ -75,3 +75,25 @@ test("Studio toolbar exposes percentage sliders, center share and size slider",(
  assert.match(studio,/normalizeLayoutPrefs\(prefs\)/);
  assert.match(studio,/addEventListener\("resize",updateMode/);
 });
+
+test("mobile block palette stays single-column even when earlier CSS requested two columns",()=>{
+ const css=readFileSync(new URL("../styles/responsive-v14.css",import.meta.url),"utf8");
+ assert.match(css,/body\[data-mobile-view="blocks"\] \.palette-groups \{display:block;grid-template-columns:none/);
+});
+test("mobile switching away from workspace exits focus mode",()=>{
+ const studio=readFileSync(new URL("../src/studio.js",import.meta.url),"utf8");
+ assert.match(studio,/if\(prefs.focus&&prefs.mobile!=="workspace"\)prefs.focus=false/);
+});
+test("responsive rules are syntactically balanced and loaded exactly once",()=>{
+ const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+ const css=readFileSync(new URL("../styles/responsive-v14.css",import.meta.url),"utf8");
+ assert.equal((html.match(/href="styles\/responsive-v14\.css"/g)||[]).length,1);
+ const withoutComments=css.replace(/\/\*[\s\S]*?\*\//g,"");
+ let depth=0;
+ for(const char of withoutComments){
+  if(char==="{")depth++;
+  if(char==="}")depth--;
+  assert.ok(depth>=0,"Unexpected CSS closing brace");
+ }
+ assert.equal(depth,0,"Unbalanced CSS blocks");
+});
