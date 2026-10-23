@@ -1,4 +1,5 @@
 import {newExpression,EXPRESSION_KINDS,expressionSlots,expressionType,compileExpression,validateExpression} from "./expressions.js";
+import {checkSocketTree} from "./v2-expressions.js";
 
 const mk=(tag,cls,text)=>{
   const n=document.createElement(tag);
@@ -23,7 +24,7 @@ export function mountExpressionComposer({getLanguage,notify}){
   close.type="button";save.type="button";controls.append(close,save);
   dialog.append(heading,body,feedback,output,controls);
   document.body.append(dialog);
-  let tree=newExpression(),applyValue=null;
+  let tree=newExpression(),applyValue=null,copiedNode=null;
   let language="luau";
   function updatePreview(){
     const issues=validateExpression(tree,language);
@@ -43,6 +44,26 @@ export function mountExpressionComposer({getLanguage,notify}){
     function nodeView(node,onChange,depth=0){
       const card=mk("div","expression-node");
       card.style.setProperty("--depth",String(Math.min(depth,6)));
+      card.draggable=true;card.title="Drag an expression to another socket, or use Copy/Paste";
+      card.addEventListener("dragstart",event=>{
+        event.stopPropagation();
+        event.dataTransfer?.setData("application/x-easyscript-expression",JSON.stringify(node));
+        if(event.dataTransfer)event.dataTransfer.effectAllowed="copy";
+      });
+      card.addEventListener("dragover",event=>{
+        if(!event.dataTransfer?.types?.includes("application/x-easyscript-expression"))return;
+        event.preventDefault();event.stopPropagation();card.classList.add("expression-drop-ready");
+      });
+      card.addEventListener("dragleave",()=>card.classList.remove("expression-drop-ready"));
+      card.addEventListener("drop",event=>{
+        event.preventDefault();event.stopPropagation();card.classList.remove("expression-drop-ready");
+        try{
+          const value=event.dataTransfer.getData("application/x-easyscript-expression");
+          const updated=JSON.parse(value);
+          checkSocketTree(updated,language);
+          onChange(updated);paint();
+        }catch(e){feedback.textContent="Socket drop rejected: "+e.message;}
+      });
       const head=mk("div","expression-node-head");
       const sel=mk("select","expression-kind");
       for(const kind of EXPRESSION_KINDS){
@@ -52,6 +73,17 @@ export function mountExpressionComposer({getLanguage,notify}){
       sel.value=node.kind;
       sel.setAttribute("aria-label","Expression kind");
       head.append(sel,mk("span","expression-type",expressionType(node)));
+      const copy=mk("button","expression-node-action","Copy");
+      copy.type="button";copy.title="Copy this expression subtree";
+      copy.addEventListener("click",()=>{copiedNode=structuredClone(node);feedback.textContent="Expression subtree copied";});
+      const paste=mk("button","expression-node-action","Paste");
+      paste.type="button";paste.title="Replace this socket with a copied expression";
+      paste.addEventListener("click",()=>{
+        if(!copiedNode)return;
+        try{const safe=checkSocketTree(copiedNode,language);onChange(structuredClone(safe));paint();}
+        catch(e){feedback.textContent=e.message;}
+      });
+      head.append(copy,paste);
       card.append(head);
       sel.addEventListener("change",()=>{onChange(newExpression(sel.value));paint();});
       if(expressionSlots(node.kind).length){
@@ -86,15 +118,19 @@ export function mountExpressionComposer({getLanguage,notify}){
   }
   close.addEventListener("click",()=>dialog.close());
   save.addEventListener("click",()=>{
-    try{const value=compileExpression(tree,language);applyValue?.(value);dialog.close();notify("Expression inserted into the block");}
+    try{const value=compileExpression(tree,language);applyValue?.(value,structuredClone(tree));dialog.close();notify("Expression inserted into the block");}
     catch(e){feedback.textContent=e.message;}
   });
   dialog.addEventListener("close",()=>{applyValue=null;});
   return {
-    open(source,callback){
+    open(source,callback,initialTree=null){
       language=getLanguage();
       tree=newExpression("raw");
       tree.value=String(source??"0").slice(0,400);
+      if(initialTree){
+        try{tree=checkSocketTree(initialTree,language);}
+        catch{/* revert to last source expression */}
+      }
       applyValue=callback;
       paint();dialog.showModal();
     }
