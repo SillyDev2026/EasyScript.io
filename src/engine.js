@@ -2,6 +2,7 @@ import {EXTRA_DEFINITIONS,extensionCode,extensionDiagnostics,extraTemplate} from
 import {ROBLOX_DEFINITIONS,robloxCode,robloxDiagnostics} from "./roblox-blocks.js";
 import {JS_DEFINITIONS,javascriptCode,javascriptDiagnostics} from "./javascript-blocks.js";
 import {inlineExpression,expressionWarnings} from "./format.js";
+import {packTemplate} from "./packs.js";
 export const VERSION = "0.6.0";
 export const DEFINITIONS = {
   print: { name:"Print", group:"Output", color:"blue", fields:{value:'"Hello world!"'} },
@@ -38,6 +39,7 @@ export function projectTemplate(template = "starter") {
   const p = {schema:1,title:"My First Script",language:"luau",blocks:[]};
   if (template === "blank") {p.title = "Untitled Project"; return p;}
   const extra=extraTemplate(template,newBlock);if(extra)return extra;
+  const packed=packTemplate(template,newBlock);if(packed)return packed;
   if (template === "counter") {
     p.title = "Coin Counter";
     const a = newBlock("variable");a.fields.value = "0";
@@ -207,7 +209,7 @@ export function generate(project) {
   }
   emit(project.blocks,js?1:0);
   if(js)lines.push("}","","main().catch(console.error);");
-  return lines.join("\n")+"\n";
+  return lines.map(line=>line.replace(/[\r\n\u2028\u2029]+\s*/g," ")).join("\n")+"\n";
 }
 export function lint(project){
   const problems=[],functions=new Set(),calls=[],declared=new Set();
