@@ -9,8 +9,8 @@ function memoryStorage(){
   return {getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,String(value))};
 }
 test("v0.5 exports 36 block types and 4 additional templates",()=>{
-  assert.equal(VERSION,"0.7.0");
-  assert.equal(Object.keys(DEFINITIONS).length,128);
+  assert.equal(VERSION,"1.0.0");
+  assert.equal(Object.keys(DEFINITIONS).length,131);
   for(const key of ["list","loop","attributes","join"])assert.ok(projectTemplate(key).blocks.length);
 });
 test("list template previews deterministic list operations",()=>{
