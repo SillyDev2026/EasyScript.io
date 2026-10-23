@@ -5,6 +5,7 @@ import {inlineExpression,expressionWarnings} from "./format.js";
 import {packTemplate} from "./packs.js";
 import {PROJECT_DEFINITIONS,projectBlockCode,projectBlockDiagnostics} from "./project-blocks.js";
 import {EXPANDED_LUAU_DEFINITIONS,expandedLuauCode,expandedLuauDiagnostics} from "./expanded-luau.js";
+import {EXPANDED_JS_DEFINITIONS,expandedJSCode,expandedJSDiagnostics} from "./expanded-javascript.js";
 export const VERSION = "1.2.0";
 export const DEFINITIONS = {
   print: { name:"Print", group:"Output", color:"blue", fields:{value:'"Hello world!"'} },
@@ -29,7 +30,8 @@ export const DEFINITIONS = {
   ...ROBLOX_DEFINITIONS,
   ...JS_DEFINITIONS,
   ...PROJECT_DEFINITIONS,
-  ...EXPANDED_LUAU_DEFINITIONS
+  ...EXPANDED_LUAU_DEFINITIONS,
+  ...EXPANDED_JS_DEFINITIONS
 };
 let sequence = 0;
 export function newBlock(type) {
@@ -239,6 +241,8 @@ export function generate(project) {
       if(projectCode){lines.push(...projectCode);continue;}
       const expanded=expandedLuauCode(b,project.language,level,emitChild);
       if(expanded){lines.push(...expanded);continue;}
+      const expandedJS=expandedJSCode(b,project.language,level,emitChild);
+      if(expandedJS){lines.push(...expandedJS);continue;}
       switch(b.type) {
         case "print":lines.push(s+(js?"console.log("+expression(f.value,"undefined")+");":"print("+expression(f.value)+")"));break;
         case "variable":lines.push(s+(js?"let ":"local ")+f.name+(!js&&f.type?.trim()?": "+f.type.trim():"")+" = "+expression(f.value,js?"undefined":"nil")+(js?";":""));break;
@@ -341,6 +345,7 @@ export function lint(project){
       problems.push(...javascriptDiagnostics(b,project.language,context));
       problems.push(...projectBlockDiagnostics(b,project.language,context));
       problems.push(...expandedLuauDiagnostics(b,project.language));
+      problems.push(...expandedJSDiagnostics(b,project.language));
       for(const key of DEFINITIONS[b.type]?.branches||[]){
         checkExtended(b[key]||[],{
           inLoop:b.type==="function"?false:context.inLoop||["while","repeat","each","forRange"].includes(b.type),
