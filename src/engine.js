@@ -238,7 +238,11 @@ export function lint(project){
   }
   checkScope(project.blocks);
   function checkExtended(list,context={inLoop:false,inFunction:false,hasPlayer:false}){
-    for(const b of list){
+    for(let index=0;index<list.length;index++){
+      const b=list[index];
+      if(["returnValue","breakLoop"].includes(b.type)&&index!==list.length-1){
+        problems.push({id:b.id,message:(b.type==="breakLoop"?"Break":"Return")+" must be the last statement in its block body.",severity:"error"});
+      }
       problems.push(...expressionWarnings(b));
       problems.push(...extensionDiagnostics(b,project.language,context));
       problems.push(...robloxDiagnostics(b,project.language,context));
