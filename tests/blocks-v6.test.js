@@ -8,7 +8,7 @@ import {PACKS} from "../src/packs.js";
 
 test("v0.6 exposes 128 blocks with a Luau-heavy catalog",()=>{
   assert.equal(VERSION,"1.2.0");
-  assert.equal(Object.keys(DEFINITIONS).length,157);
+  assert.equal(Object.keys(DEFINITIONS).length,172);
   assert.ok(ROBLOX_TYPES.size>=70);
   assert.ok(JS_TYPES.size>=15);
 });
