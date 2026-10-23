@@ -184,10 +184,14 @@ function palette(){
   $("paletteResults").textContent=total+" block options";
 }
 function setupCategories(){
-  const select=$("paletteCategory");
+  const select=$("paletteCategory"),before=select.value;
   const groups=[...new Set(Object.values(DEFINITIONS).map(x=>x.group))];
-  for(const group of groups){const option=make("option","",group);option.value=group;select.append(option);}
-  select.addEventListener("change",palette);
+  select.replaceChildren();
+  for(const [value,label] of [["relevant","Relevant to language"],["all","All blocks"],...groups.map(g=>[g,g])]){
+    const option=make("option","",label);option.value=value;select.append(option);
+  }
+  select.value=[...select.options].some(o=>o.value===before)?before:"relevant";
+  select.onchange=palette;
 }
 function actionButton(symbol,title,callback){
   const btn=make("button","tiny-btn",symbol);btn.title=title;btn.type="button";
