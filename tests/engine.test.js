@@ -71,7 +71,7 @@ test("new Roblox event templates output server Luau",()=>{
   const source=generate(lead);
   assert.match(source,/PlayerAdded:Connect\(function\(player\)/);
   assert.match(source,/Instance.new\("IntValue"\)/);
-  assert.match(source,/FindFirstChild\("leaderstats"\)/);
+  assert.match(source,/local leaderstats = Instance.new\("Folder"\)/);
   assert.equal(lint(lead).filter(issue=>issue.severity==="error").length,0);
   assert.match(generate(touch),/\.Touched:Connect\(function\(hit\)/);
   assert.match(generate(remote),/OnServerEvent:Connect/);
