@@ -190,7 +190,7 @@ export function generate(project) {
     if(!blocks.length){lines.push(space(level)+(js?"// Add blocks here":"-- Add blocks here"));return;}
     for(let index=0;index<blocks.length;index++) {
       const b=blocks[index],f=b.fields,s=space(level);
-      if(b.type==="moduleReturn"&&(level!==0||index!==blocks.length-1)){
+      if(!js&&b.type==="moduleReturn"&&(level!==0||index!==blocks.length-1)){
         lines.push(s+"-- ModuleScript return must be the final top-level block.");
         continue;
       }
