@@ -1,4 +1,5 @@
-// Additional v0.5 visual building blocks. Pure code-generation helpers.
+import {inlineExpression} from "./format.js";
+// Additional visual blocks, with canonical single-line expression handling.
 export const EXTRA_DEFINITIONS = {
   random: {name:"Random integer",group:"Math & Numbers",color:"purple",fields:{name:"Roll",min:"1",max:"6"}},
   clamp: {name:"Clamp number",group:"Math & Numbers",color:"purple",fields:{name:"Limited",value:"100",min:"0",max:"50"}},
@@ -24,9 +25,9 @@ const identifier=/^[A-Za-z_]\w*$/;
 const reserved=new Set("and break do else elseif end false for function if in local nil not or repeat return then true until while await async const let var class import export default new this".split(" "));
 export const EXTENSION_ROBLOX_TYPES=new Set(["playerLeaving","characterAdded","setAttribute","getAttribute","destroyInstance"]);
 const clean=v=>String(v??"").trim();
-const expr=(v,fallback="nil")=>clean(v)||fallback;
-const jsExpr=(v,fallback="undefined")=>clean(v)||fallback;
-const quote=v=>JSON.stringify(String(v));
+const expr=inlineExpression;
+const jsExpr=inlineExpression;
+const quote=v=>JSON.stringify(String(v).replace(/[\r\n]+/g," "));
 export function extensionCode(b,js,level,emit){
   const s="    ".repeat(level),f=b.fields;
   const e=(v)=>js?jsExpr(v):expr(v);
