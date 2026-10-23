@@ -11,7 +11,7 @@ import {addRecovery,listRecovery,restoreRecovery} from "../src/recovery.js";
 const store=()=>{const d=new Map();return {getItem:k=>d.get(k)||null,setItem:(k,v)=>d.set(k,String(v))};};
 test("v1 ships 131 backward-compatible scripting blocks",()=>{
   assert.equal(VERSION,"1.2.0");
-  assert.equal(Object.keys(DEFINITIONS).length,157);
+  assert.equal(Object.keys(DEFINITIONS).length,172);
   for(const type of ["requireModule","moduleReturn","jsImportModule"])assert.ok(DEFINITIONS[type]);
 });
 test("composable numeric slots compile into canonical Luau and JS",()=>{
