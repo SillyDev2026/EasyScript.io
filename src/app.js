@@ -1,6 +1,7 @@
 import {VERSION,DEFINITIONS,newBlock,projectTemplate,sanitizeProject,findLocation,addBlock,traverse,generate,lint,simulate} from "./engine.js";
 import {highlightInto} from "./highlight.js";
 import {listSavedProjects,saveProjectSnapshot,openSavedProject,deleteSavedProject} from "./library.js";
+import {mountStudio} from "./studio.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -14,6 +15,7 @@ let insertion = {parent:null,branch:"root"};
 let activeTab = "code";
 let toastTimer = null;
 let saveTimer = null;
+let studioFeatures = null;
 
 function load() {
   try {
@@ -83,7 +85,7 @@ function paletteButton(type,onPick){
   btn.type="button";
   btn.append(iconFor(type),make("span","",DEFINITIONS[type].name));
   btn.draggable=true;
-  btn.addEventListener("click",()=>onPick(type));
+  btn.addEventListener("click",()=>{studioFeatures?.trackRecent(type);onPick(type);});
   btn.addEventListener("dragstart",event=>{
     event.dataTransfer.effectAllowed="copy";
     event.dataTransfer.setData("text/plain",JSON.stringify({kind:"new",type}));
@@ -94,18 +96,30 @@ function palette(){
   const query=$("paletteSearch").value.trim().toLowerCase();
   const parent=$("palette");parent.replaceChildren();
   const groups=[...new Set(Object.values(DEFINITIONS).map(x=>x.group))];
+  const matches=type=>(DEFINITIONS[type].name+" "+DEFINITIONS[type].group+" "+type).toLowerCase().includes(query);
   let total=0;
-  for(const group of groups){
-    const list=Object.keys(DEFINITIONS).filter(type=>DEFINITIONS[type].group===group&&
-      (DEFINITIONS[type].name+" "+group+" "+type).toLowerCase().includes(query));
-    if(!list.length)continue;
-    parent.append(make("div","palette-heading",group));
-    for(const type of list){
-      parent.append(paletteButton(type,t=>mutate(()=>addBlock(project,t))));
-      total++;
+  function addPaletteGroup(title,types){
+    const filtered=[...new Set(types)].filter(type=>DEFINITIONS[type]&&matches(type));
+    if(!filtered.length)return;
+    parent.append(make("div","palette-heading",title));
+    for(const type of filtered){
+      const row=make("div","palette-row");
+      const favorite=studioFeatures?.isFavorite(type)||false;
+      const pick=paletteButton(type,t=>mutate(()=>addBlock(project,t)));
+      const star=make("button","favorite-toggle"+(favorite?" is-favorite":""),favorite?"★":"☆");
+      star.type="button";star.title=(favorite?"Remove ":"Add ")+"favorite: "+DEFINITIONS[type].name;
+      star.setAttribute("aria-pressed",String(favorite));
+      star.setAttribute("aria-label",star.title);
+      star.addEventListener("click",()=>studioFeatures?.toggleFavorite(type));
+      row.append(pick,star);parent.append(row);total++;
     }
   }
-  if(!total)parent.append(make("p","panel-note","No blocks found."));
+  if(studioFeatures){
+    addPaletteGroup("★ Favorites",studioFeatures.favorites());
+    addPaletteGroup("↶ Recently used",studioFeatures.recent());
+  }
+  for(const group of groups)addPaletteGroup(group,Object.keys(DEFINITIONS).filter(type=>DEFINITIONS[type].group===group));
+  if(!total)parent.append(make("p","panel-note","No blocks found. Try another search."));
 }
 function actionButton(symbol,title,callback){
   const btn=make("button","tiny-btn",symbol);btn.title=title;btn.type="button";
@@ -274,6 +288,7 @@ function updateOutputs(){
   $("issueCount").textContent=String(problems.length);
   const pane=$("diagnosticsPane");pane.replaceChildren();
   if(!problems.length)pane.append(make("p","success","✓ No basic issues found. Test exported code in its target runtime."));
+  studioFeatures?.update();
   for(const issue of problems){
     const element=make("button","problem "+issue.severity,issue.severity.toUpperCase()+": "+issue.message);
     element.type="button";
@@ -402,5 +417,7 @@ function bindActions(){
   });
   for(const tab of ["code","diagnostics","console"])$(tab+"Tab").addEventListener("click",()=>selectTab(tab));
 }
-bindActions();palette();render();selectTab("code");
+bindActions();
+studioFeatures=mountStudio({getProject:()=>project,notify,renderPalette:palette});
+palette();render();selectTab("code");
 console.info("EasyScript.io visual editor v"+VERSION+" initialized");
