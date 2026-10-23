@@ -7,10 +7,11 @@ function fileId(){
   return "file_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,10);
 }
 function validName(name,language){
+  const desired=extensions[language]||".luau";
   let value=String(name||"").trim().replace(/[\\/:*?"<>|]/g,"-").slice(0,72);
+  value=value.replace(/\.(luau|lua|js)$/i,"").replace(/[. ]+$/,"");
   if(!value)value="Script";
-  if(!/\.(luau|lua|js)$/.test(value))value+=extensions[language]||".luau";
-  return value;
+  return value.slice(0,72-desired.length)+desired;
 }
 function uniqueName(files,requested,skip=null){
   const existing=new Set(files.filter(x=>x.id!==skip).map(x=>x.name.toLowerCase()));
