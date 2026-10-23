@@ -79,11 +79,10 @@ test("basic generated JavaScript imports into editable blocks and is syntactical
  const generated=generate({...p,blocks:parsed.blocks});
  assert.doesNotThrow(()=>new vm.Script(generated));
 });
-test("complex Luau source import refuses unsupported statements with line numbers",()=>{
- const complex='local Coins = 0\nif Coins > 0 then\n    print(Coins)\nend\n';
+test("unsupported or unmatched LuaU statements refuse conversion with line numbers",()=>{
+ const complex='local Coins = 0\nif Coins > 0 then\n    workspace.Part:Destroy()\nend\n';
  const report=importSourceToBlocks(complex,"luau");
  assert.equal(report.ok,false);
- assert.ok(report.errors.some(x=>x.line===2));
  assert.ok(report.errors.some(x=>x.line===3));
  assert.throws(()=>makeImportedProject(complex,"luau"),/Unsupported/);
 });
@@ -151,4 +150,50 @@ test("unsupported expressions remain untouched rather than being silently reinte
  }
  assert.throws(()=>parseExpressionToTree("Coins == 1 && true","luau"),/not Luau/);
  assert.throws(()=>parseExpressionToTree("Coins ~= 1","javascript"),/not JavaScript/);
+});
+
+test("nested Luau conditionals, loops and functions reconstruct actual branch blocks",()=>{
+ const p=projectTemplate("blank");
+ const condition=addBlock(p,"if");
+ condition.fields.left="Coins";condition.fields.operator=">=";condition.fields.right="10";
+ addBlock(p,"print",condition.id,"then").fields.value='"Enough"';
+ addBlock(p,"print",condition.id,"else").fields.value='"Low"';
+ const loop=addBlock(p,"repeat");loop.fields.count="2";
+ addBlock(p,"print",loop.id,"body").fields.value='"Tick"';
+ const fn=addBlock(p,"function");fn.fields.name="greet";fn.fields.params="n: number";fn.fields.returnType="number";
+ addBlock(p,"returnValue",fn.id,"body").fields.value="n";
+ const original=generate(p);
+ const parsed=importSourceToBlocks(original,"luau");
+ assert.equal(parsed.ok,true,JSON.stringify(parsed.errors));
+ assert.deepEqual(parsed.blocks.map(b=>b.type),["if","repeat","function"]);
+ assert.equal(parsed.blocks[0].then[0].type,"print");
+ assert.equal(parsed.blocks[0].else[0].type,"print");
+ assert.equal(parsed.blocks[1].body[0].type,"print");
+ assert.equal(parsed.blocks[2].body[0].type,"returnValue");
+ const generated=generate({...p,blocks:parsed.blocks});
+ assert.match(generated,/local function greet\(n: number\): number/);
+});
+test("nested JavaScript if and while structures reconstruct with balanced braces",()=>{
+ const p=projectTemplate("blank");p.language="javascript";
+ const condition=addBlock(p,"if");
+ condition.fields.left="Coins";condition.fields.operator=">=";condition.fields.right="10";
+ addBlock(p,"print",condition.id,"then").fields.value='"good"';
+ addBlock(p,"print",condition.id,"else").fields.value='"bad"';
+ const loop=addBlock(p,"while");loop.fields.left="Coins";loop.fields.right="12";loop.fields.operator="<";
+ addBlock(p,"increment",loop.id,"body");
+ const parsed=importSourceToBlocks(generate(p),"javascript");
+ assert.equal(parsed.ok,true,JSON.stringify(parsed.errors));
+ assert.deepEqual(parsed.blocks.map(b=>b.type),["if","while"]);
+ assert.equal(parsed.blocks[0].else.length,1);
+ assert.doesNotThrow(()=>new vm.Script(generate({...p,blocks:parsed.blocks})));
+});
+test("simple Roblox PlayerAdded event and service preamble roundtrip without duplicate service declarations",()=>{
+ const p=projectTemplate("blank");
+ const event=addBlock(p,"playerJoined");
+ addBlock(p,"print",event.id,"body").fields.value='"Joined"';
+ const parsed=importSourceToBlocks(generate(p),"luau");
+ assert.equal(parsed.ok,true,JSON.stringify(parsed.errors));
+ assert.equal(parsed.blocks[0].type,"service");
+ assert.equal(parsed.blocks[1].type,"playerJoined");
+ assert.equal((generate({...p,blocks:parsed.blocks}).match(/GetService\("Players"\)/g)||[]).length,1);
 });
