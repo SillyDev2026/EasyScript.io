@@ -4,6 +4,7 @@ import {listSavedProjects,saveProjectSnapshot,openSavedProject,deleteSavedProjec
 import {mountStudio} from "./studio.js";
 import {loadWorkspace,saveWorkspace,activeFile,commitActive,chooseFile} from "./workspace.js";
 import {mountWorkspaceUI} from "./workspace-ui.js";
+import {copyBlockTree,pasteBlockTree,clipboardAvailable,countBlockTree} from "./clipboard.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -18,6 +19,7 @@ let project = load();
 let workspace = loadWorkspace(localStorage,project);
 project = activeFile(workspace).project;
 let workspaceUI = null;
+const collapsedBlocks = new Set();
 let undoStack = [];
 let redoStack = [];
 let insertion = {parent:null,branch:"root"};
@@ -248,6 +250,7 @@ function showAdd(parent=null,branch="root"){
 function blockView(block) {
   const definition=DEFINITIONS[block.type];
   const section=make("section","block");section.dataset.tone=definition.color;section.dataset.blockId=block.id;
+  section.classList.toggle("block-collapsed",collapsedBlocks.has(block.id));
   section.draggable=true;
   section.addEventListener("dragstart",event=>{
     if(event.target!==section)return;
@@ -258,6 +261,19 @@ function blockView(block) {
   const title=make("strong","",icons[block.type]+"  "+definition.name);
   const buttons=make("div","block-actions");
   buttons.append(
+    actionButton("▸","Collapse or expand block",()=>{
+      if(collapsedBlocks.has(block.id))collapsedBlocks.delete(block.id);else collapsedBlocks.add(block.id);
+      section.classList.toggle("block-collapsed",collapsedBlocks.has(block.id));
+    }),
+    actionButton("⎘","Copy block for use in another file",()=>{
+      try{copyBlockTree(localStorage,block);notify("Copied "+countBlockTree(block)+" block(s)");}
+      catch(error){notify(error.message);}
+    }),
+    actionButton("⇣","Paste copied block after this block",()=>{
+      if(!clipboardAvailable(localStorage)){notify("Copy a block first");return;}
+      try{mutate(()=>pasteBlockTree(localStorage,project,block.id));notify("Block pasted");}
+      catch(error){notify("Paste failed: "+error.message);}
+    }),
     actionButton("↑","Move up",()=>{
       const loc=findLocation(project,block.id);
       if(loc&&loc.index>0)mutate(()=>loc.list.splice(loc.index-1,0,...loc.list.splice(loc.index,1)));
@@ -415,6 +431,13 @@ function bindActions(){
     if(!project.blocks.length||confirm("Clear every block in this project?"))mutate(()=>project.blocks=[]);
   });
   $("addBlockBtn").addEventListener("click",()=>showAdd());
+  const pasteAtEnd=make("button","btn compact ghost","⇣ Paste block");
+  pasteAtEnd.title="Paste a copied block into this script";
+  pasteAtEnd.addEventListener("click",()=>{
+    try{mutate(()=>pasteBlockTree(localStorage,project));notify("Block pasted at end of script");}
+    catch(error){notify("Paste failed: "+error.message);}
+  });
+  $("addBlockBtn").after(pasteAtEnd);
   $("paletteSearch").addEventListener("input",palette);
   $("projectTitle").addEventListener("focus",checkpoint);
   $("projectTitle").addEventListener("input",event=>{project.title=event.target.value.slice(0,80);persist();});
