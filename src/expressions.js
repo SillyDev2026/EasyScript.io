@@ -22,6 +22,11 @@ export const EXPRESSION_KINDS=[
   {value:"vector3",name:"Vector3 (Roblox only)",type:"vector3"}
 ];
 const IDENT=/^[A-Za-z_][A-Za-z0-9_]*$/;
+const LUAU_RESERVED=new Set("and break continue do else elseif end false for function if in local nil not or repeat return then true until while".split(" "));
+const JS_RESERVED=new Set("await break case catch class const continue debugger default delete do else export extends false finally for function if import in instanceof let new null return super switch this throw true try typeof var void while with yield".split(" "));
+export const supportedLanguage=language=>language==="luau"||language==="javascript";
+export const validExpressionIdentifier=(name,language="luau")=>
+  IDENT.test(name)&&!(language==="javascript"?JS_RESERVED:LUAU_RESERVED).has(name);
 const sourceText=(value)=>String(value??"").trim().replace(/[\r\n\u2028\u2029]+/g," ");
 export const newExpression=(kind="raw")=>{
   if(!EXPRESSION_KINDS.some(x=>x.value===kind))throw new Error("Unknown expression kind");
@@ -51,9 +56,20 @@ export function validateExpression(node,language="luau"){
     if(depth>7){problems.push("Maximum expression depth is 7");return;}
     if(!n||!EXPRESSION_KINDS.some(x=>x.value===n.kind)){problems.push("Unknown expression type");return;}
     if(n.kind==="vector3"&&language!=="luau")problems.push("Vector3 needs Roblox Luau");
-    if(n.kind==="variable"&&!IDENT.test(sourceText(n.value)))problems.push("Variable names must be identifiers");
-    if(n.kind==="number"&&!Number.isFinite(Number(n.value)))problems.push("Numbers must be finite");
+    if(n.kind==="variable"&&!validExpressionIdentifier(sourceText(n.value),language))
+      problems.push("Variable must have a valid, non-reserved name");
+    if(n.kind==="number"&&(!String(n.value??"").trim()||!Number.isFinite(Number(n.value))))
+      problems.push("Numbers must be nonempty and finite");
+    if(n.kind==="boolean"&&typeof n.value!=="boolean")problems.push("Boolean must be true or false");
+    if(n.kind==="string"&&String(n.value??"").length>400)problems.push("Text value is too long");
     if(n.kind==="raw"&&!sourceText(n.value))problems.push("Raw expression cannot be empty");
+    if(n.kind==="divide"&&n.right?.kind==="number"&&String(n.right.value??"").trim()&&Number(n.right.value)===0)
+      problems.push("Division by zero");
+    if(n.kind==="random"&&n.left?.kind==="number"&&n.right?.kind==="number"){
+      const a=Number(n.left.value),b=Number(n.right.value);
+      if(Number.isFinite(a)&&Number.isFinite(b)&&(!Number.isInteger(a)||!Number.isInteger(b)||a>b))
+        problems.push("Random range needs integer bounds with min <= max");
+    }
     for(const slot of expressionSlots(n.kind)){
       visit(n[slot],depth+1);
       const actual=expressionType(n[slot]);
@@ -62,6 +78,7 @@ export function validateExpression(node,language="luau"){
         problems.push(slot+" needs "+needed+", but has "+actual);
     }
   }
+  if(!supportedLanguage(language))problems.push("Unsupported target language");
   visit(node,0);
   return problems;
 }
@@ -73,7 +90,7 @@ export function compileExpression(node,language="luau"){
       case "raw":return sourceText(n.value);
       case "number":return String(Number(n.value));
       case "string":return JSON.stringify(String(n.value??""));
-      case "boolean":return n.value?"true":"false";
+      case "boolean":return n.value===true?"true":"false";
       case "variable":return sourceText(n.value);
       case "not":return "("+(language==="luau"?"not ":"!")+render(n.child)+")";
       case "length":return language==="luau"?"#tostring("+render(n.child)+")":"String("+render(n.child)+").length";
