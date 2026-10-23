@@ -1,0 +1,278 @@
+/* EasyScript v1.4 — authoritative adaptive geometry.
+   Loaded after legacy styles to prevent older media queries fighting over panel positions.
+   Percentages represent the available studio row; gaps are subtracted by the grid's fr track.
+*/
+:root {
+  --left-pane:19%;
+  --right-pane:29%;
+  --ui-scale:1;
+  --adaptive-gap:clamp(8px,1.15vw,20px);
+  --adaptive-pad:clamp(10px,1.8vw,34px);
+  --panel-height:clamp(550px,calc(100dvh - 285px),1080px);
+  --touch-target:calc(39px * var(--ui-scale));
+}
+html {max-width:100%;scroll-padding-top:12px}
+body {width:100%;min-width:0;max-width:100%;overflow-x:clip}
+.app-shell {
+  box-sizing:border-box;
+  width:100%;
+  max-width:2400px;
+  min-width:0;
+  min-height:100svh;
+  padding-inline:max(var(--adaptive-pad),env(safe-area-inset-left)) max(var(--adaptive-pad),env(safe-area-inset-right));
+  margin-inline:auto;
+}
+.app-shell > *,.layout > *, .panel > *, .studio-toolbar > *,
+.pro-toolbar > *, .project-bar > *, .header > * {min-width:0}
+.header {width:100%;display:flex;gap:clamp(8px,1.4vw,20px);align-items:center;justify-content:space-between}
+.header-actions {min-width:0;max-width:100%;justify-content:flex-end;gap:clamp(5px,.7vw,11px)}
+.header-actions .btn {font-size:clamp(11px,calc(12px * var(--ui-scale)),15px)}
+.header-actions .btn span {white-space:nowrap}
+.brand-words strong {font-size:clamp(16px,calc(20px * var(--ui-scale)),25px)}
+.version {white-space:nowrap}
+.project-bar {display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,auto);align-items:center;gap:clamp(8px,1vw,18px)}
+.project-input-wrap {width:100%;max-width:580px;min-width:0}
+.project-input-wrap input {width:100%;min-width:0;flex:1;font-size:clamp(13px,calc(14px * var(--ui-scale)),18px)}
+.project-controls {justify-content:flex-end;min-width:0;max-width:100%}
+.project-controls select {min-width:0;max-width:min(20vw,230px);flex:1 1 125px}
+.layout {
+  display:grid;
+  grid-template-columns:minmax(0,var(--left-pane)) minmax(0,1fr) minmax(0,var(--right-pane));
+  grid-template-rows:minmax(0,1fr);
+  gap:var(--adaptive-gap);
+  align-items:stretch;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  min-height:0;
+  flex:initial;
+}
+.layout > .palette-panel,
+.layout > .editor-panel,
+.layout > .result-panel {
+  grid-column:auto;
+  grid-row:auto;
+  display:flex;
+  flex-direction:column;
+  width:auto;
+  height:var(--panel-height);
+  max-width:100%;
+  min-width:0;
+  min-height:0;
+  max-height:none;
+  overflow:hidden;
+}
+.panel-top {padding:clamp(10px,calc(13px * var(--ui-scale)),21px);gap:8px;min-width:0}
+.panel-top > div {min-width:0}
+.panel-top h2 {font-size:clamp(14px,calc(17px * var(--ui-scale)),22px);overflow-wrap:anywhere}
+.palette-panel .panel-note {font-size:clamp(11px,calc(12px * var(--ui-scale)),15px)}
+.palette-panel .search-wrap {margin-inline:clamp(10px,1.15vw,18px)}
+.palette-panel .search-wrap input {box-sizing:border-box;max-width:none;width:100%}
+.palette-filter-label {margin-inline:clamp(10px,1.15vw,18px)}
+.palette-category {width:calc(100% - 2 * clamp(10px,1.15vw,18px));margin-inline:clamp(10px,1.15vw,18px)}
+.palette-row {min-width:0}
+.palette-row .palette-button {min-width:0;white-space:normal;font-size:clamp(11px,calc(12px * var(--ui-scale)),15px)}
+.palette-groups {min-width:0;min-height:0;max-height:none;flex:1 1 0;overflow:auto;overscroll-behavior:contain}
+.palette-footer {flex:0 0 auto;padding:clamp(9px,1vw,16px);min-width:0}
+.workspace {flex:1 1 0;min-width:0;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain}
+.workspace-intro,.editor-guide,.workspace-bottom {flex:0 0 auto;min-width:0}
+.workspace-intro {margin-inline:clamp(10px,1vw,18px);font-size:clamp(10px,calc(11px * var(--ui-scale)),14px)}
+.editor-guide span {font-size:clamp(10px,calc(11px * var(--ui-scale)),14px)}
+.block {min-width:0;max-width:100%}
+.block-heading {min-width:0}
+.block-heading strong {min-width:0;flex:1 1 115px;overflow-wrap:anywhere}
+.block-actions {max-width:100%}
+.block-fields {min-width:0;grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr))}
+.block-fields label,.block-fields input,.block-fields select {min-width:0;max-width:100%}
+.block-fields input,.block-fields select {font-size:clamp(12px,calc(12px * var(--ui-scale)),16px);min-height:var(--touch-target)}
+.block-branch {min-width:0;max-width:100%;margin-left:clamp(4px,1vw,10px);padding-left:clamp(7px,1vw,12px)}
+.workspace-bottom {padding:clamp(10px,calc(12px * var(--ui-scale)),18px)}
+.workspace-bottom > * {min-width:0}
+.result-content {display:flex;flex-direction:column;min-height:0;max-height:none;flex:1 1 0;overflow:hidden}
+.result-content.hidden {display:none}
+.code-toolbar {flex:0 0 auto;min-width:0;max-width:100%;gap:8px;overflow-wrap:anywhere}
+#codeFilename {display:block;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.code-scroller {flex:1 1 0;min-height:140px;max-height:none;height:auto;max-width:100%;min-width:0;overflow:auto;overscroll-behavior:contain}
+.code-scroller code {font-size:clamp(11px,calc(11px * var(--ui-scale)),15px)}
+#diagnosticsPane,#consolePane {overflow:auto;overscroll-behavior:contain}
+.tabs {flex:0 0 auto;min-width:0;overflow-x:auto;max-width:100%}
+.tab {white-space:nowrap}
+.result-bottom {flex:0 0 auto;padding:clamp(10px,1vw,15px)}
+.file-tabbar {width:100%;max-width:100%;min-width:0}
+.file-tabs {flex:1 1 0;min-width:0}
+.file-tab {max-width:clamp(118px,15vw,240px);font-size:clamp(11px,calc(12px * var(--ui-scale)),15px)}
+.file-actions {flex:0 0 auto}
+.studio-toolbar,.pro-toolbar,.ultra-section,.ultra-plus-section,.ultra-expansion,.ultra-v13 {
+  box-sizing:border-box;min-width:0;max-width:100%;width:100%
+}
+.studio-toolbar-controls,.studio-toolbar-bottom,.studio-toolbar-top {min-width:0;max-width:100%}
+.studio-toolbar-bottom {display:grid;grid-template-columns:auto auto auto auto auto minmax(170px,1fr) auto;gap:clamp(8px,1vw,16px);align-items:center}
+.studio-size-control,.studio-scale-control,.studio-editor-share {display:flex;align-items:center;gap:7px;min-width:0;color:#a4b9db;font-size:clamp(11px,calc(11px * var(--ui-scale)),14px)}
+.studio-size-control input,.studio-scale-control input {width:clamp(70px,7vw,132px);min-width:0;accent-color:#80a9ff}
+.studio-size-control output,.studio-scale-control output,.studio-editor-share output {font-variant-numeric:tabular-nums;min-width:33px}
+.studio-jump {position:relative;width:auto;min-width:0;max-width:none;margin-left:0}
+.studio-jump input {max-width:none}
+.studio-mode {display:inline-flex;align-items:center;padding:4px 9px;border:1px solid #34547f;border-radius:999px;color:#adc6e7;background:#1a2e4a;font-weight:650}
+html[data-theme="light"] .studio-mode {color:#385981;background:#edf3fe;border-color:#c0d6ef}
+.studio-toolbar-controls .btn {min-height:var(--touch-target)}
+.pro-actions {justify-content:flex-end;min-width:0}
+.pro-actions .btn,.ultra-actions .btn,.ultra-v13-nav .btn,.ultra-plus-buttons .btn,.ultra-expansion-buttons .btn {min-height:var(--touch-target)}
+.ultra-v13-nav,.ultra-plus-buttons,.ultra-expansion-buttons {width:100%;max-width:100%;min-width:0}
+.ultra-v13-pane,.ultra-plus-pane,.ultra-expansion-content {min-width:0;max-width:100%}
+.ultra-v13-input,.pro-input,.pro-select,.ultra-lab-input,.ultra-plus-select {font-size:clamp(12px,calc(13px * var(--ui-scale)),16px)}
+.audit-summary {grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr))}
+.audit-stat:last-child {grid-column:auto}
+footer.footer {max-width:100%}
+/* All dialogs fit the safe viewport, with content able to scroll without sideways clipping */
+dialog,.add-dialog,.library-dialog,.file-dialog,.expression-dialog,.pro-dialog,.copy-source-dialog,.shortcuts-dialog {
+  box-sizing:border-box;
+  width:min(96vw,880px);
+  max-width:calc(100vw - 2 * max(8px,env(safe-area-inset-left)));
+  max-height:calc(100dvh - max(22px,env(safe-area-inset-top)) - max(22px,env(safe-area-inset-bottom)));
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+.add-dialog {width:min(96vw,760px)}
+.library-dialog {width:min(96vw,700px)}
+.expression-dialog {width:min(96vw,790px)}
+.copy-source-dialog {width:min(96vw,720px)}
+.shortcuts-dialog {width:min(96vw,550px)}
+.modal-choices {min-width:0;max-height:min(54dvh,560px)}
+.modal-choices .choice-button {min-width:0;overflow-wrap:anywhere}
+.pro-scroll-list,.ultra-v13-source,.ultra-lab-preview,.ultra-plus-code,.wizard-output {
+  box-sizing:border-box;max-width:100%;min-width:0;overscroll-behavior:contain
+}
+.pro-dialog-body,.expression-tree {min-width:0;max-width:100%}
+.toast {left:auto;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));max-width:min(400px,calc(100vw - 24px))}
+body[data-focus="true"] .layout {grid-template-columns:minmax(0,1fr)}
+body[data-focus="true"] .layout > .palette-panel,
+body[data-focus="true"] .layout > .result-panel {display:none}
+body[data-focus="true"] .layout > .editor-panel {width:100%;max-width:100%;height:clamp(550px,calc(100dvh - 240px),1200px);max-height:none;min-height:0}
+/* Two-column tablet and desktop split-screen: the source pane drops below the editor. */
+@media (min-width:761px) and (max-width:1280px) {
+  .app-shell {--adaptive-pad:clamp(10px,1.5vw,24px)}
+  .header-actions {flex:1 1 auto}
+  .project-bar {grid-template-columns:minmax(210px,1fr);align-items:stretch}
+  .project-input-wrap {max-width:none}
+  .project-controls {justify-content:flex-start}
+  .project-controls select {max-width:min(35vw,280px)}
+  .layout {grid-template-columns:minmax(0,26%) minmax(0,1fr);grid-template-rows:auto auto;gap:clamp(9px,1vw,16px)}
+  .layout > .palette-panel,.layout > .editor-panel {
+    height:clamp(480px,calc(100dvh - 300px),850px);
+    max-height:none;min-height:0;grid-row:1
+  }
+  .layout > .palette-panel {grid-column:1}
+  .layout > .editor-panel {grid-column:2}
+  .layout > .result-panel {
+    grid-column:1/-1;grid-row:2;
+    height:clamp(270px,42dvh,540px);
+    max-height:none;min-height:0
+  }
+  .studio-toolbar-bottom {grid-template-columns:repeat(3,minmax(0,auto)) minmax(140px,1fr);justify-content:start}
+  .studio-size-control {display:none}
+  .studio-editor-share {display:none}
+  .studio-jump {grid-column:auto}
+  .ultra-v13-nav,.ultra-plus-buttons,.ultra-expansion-buttons {grid-template-columns:repeat(3,minmax(0,1fr))}
+  body[data-focus="true"] .layout {grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
+  body[data-focus="true"] .layout > .editor-panel {grid-column:1;grid-row:1;height:clamp(500px,calc(100dvh - 270px),1000px)}
+}
+/* Narrow portrait, foldable cover displays and small browser windows: one 100%-width panel per view. */
+@media (max-width:760px) {
+  :root {--adaptive-pad:clamp(9px,2.2vw,18px);--panel-height:auto}
+  .app-shell {padding-inline:max(var(--adaptive-pad),env(safe-area-inset-left)) max(var(--adaptive-pad),env(safe-area-inset-right))}
+  .header {align-items:stretch;flex-direction:column;gap:11px}
+  .header-brand {width:100%;min-width:0}
+  .header-brand .version {margin-left:auto}
+  .header-actions {width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .header-actions .saved {grid-column:1/-1;width:100%;margin:0}
+  .header-actions .btn {white-space:normal;min-width:0;min-height:44px;padding:8px 5px;font-size:clamp(10px,calc(10px * var(--ui-scale)),13px)}
+  .header-actions .btn span {white-space:normal}
+  .project-bar {grid-template-columns:minmax(0,1fr);gap:9px}
+  .project-input-wrap {width:100%;max-width:none}
+  .project-controls {width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;justify-content:stretch}
+  .project-controls .inline-label {display:none}
+  .project-controls select {max-width:none;min-width:0;width:100%;font-size:12px}
+  .project-controls .btn {min-width:0;min-height:43px}
+  .file-tabbar {flex-direction:column;align-items:stretch}
+  .file-tabs,.file-actions {width:100%;min-width:0}
+  .file-tab {max-width:clamp(120px,43vw,220px);min-height:43px}
+  .file-actions .btn {min-height:43px;flex:1;white-space:normal}
+  .studio-toolbar {padding:clamp(9px,2vw,14px)}
+  .studio-toolbar-top {display:flex;flex-direction:column;align-items:stretch;gap:9px}
+  .studio-toolbar-controls {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .studio-toolbar-controls label {min-width:0}
+  .studio-toolbar-controls .btn {min-width:0;min-height:42px;white-space:normal}
+  .studio-toolbar-bottom {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .studio-size-control,.studio-editor-share {display:none}
+  .studio-scale-control {grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .studio-scale-control input {flex:1;min-width:0;width:auto}
+  .studio-jump {grid-column:1/-1;grid-row:auto;width:100%;max-width:none}
+  .studio-switch {min-width:0}
+  .studio-toolbar-bottom > #resetLayout {min-width:0}
+  .mobile-nav {display:grid;position:relative;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .mobile-nav button {min-width:0;min-height:45px}
+  .layout {display:block;min-height:0;max-width:100%}
+  .layout > .panel {width:100%;min-height:0;max-height:none;height:auto;grid-column:auto;grid-row:auto}
+  body:not([data-mobile-view="blocks"]):not([data-mobile-view="code"]) .layout > .palette-panel,
+  body:not([data-mobile-view="blocks"]):not([data-mobile-view="code"]) .layout > .result-panel {display:none}
+  body[data-mobile-view="blocks"] .layout > .editor-panel,
+  body[data-mobile-view="blocks"] .layout > .result-panel {display:none}
+  body[data-mobile-view="code"] .layout > .palette-panel,
+  body[data-mobile-view="code"] .layout > .editor-panel {display:none}
+  body[data-mobile-view="blocks"] .layout > .palette-panel,
+  body[data-mobile-view="workspace"] .layout > .editor-panel,
+  body[data-mobile-view="code"] .layout > .result-panel {display:flex;flex-direction:column}
+  body[data-mobile-view="workspace"] .layout > .editor-panel {min-height:clamp(390px,68dvh,760px);max-height:none;height:auto}
+  .workspace {flex:initial;min-height:clamp(300px,52dvh,650px);max-height:min(70dvh,800px);overflow:auto;padding-inline:clamp(9px,2vw,16px)}
+  body[data-mobile-view="blocks"] .palette-groups {flex:initial;max-height:64dvh;min-height:0;overflow-y:auto}
+  body[data-mobile-view="code"] .result-panel {min-height:clamp(320px,60dvh,760px)}
+  .result-content {min-height:190px;flex:1 1 0;overflow:hidden}
+  .code-scroller {min-height:250px;max-height:62dvh;height:auto;flex:1 1 0;overflow:auto}
+  .result-bottom {padding:12px}
+  .panel-top {padding:clamp(11px,2vw,16px)}
+  .block-fields {grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr));gap:7px}
+  .block-actions .tiny-btn {min-width:32px;min-height:35px}
+  .palette-footer {padding:10px}
+  .tabs .tab {min-height:42px}
+  .pro-actions,.ultra-actions,.ultra-v13-nav,.ultra-plus-buttons,.ultra-expansion-buttons {min-width:0}
+  .ultra-v13-nav,.ultra-plus-buttons,.ultra-expansion-buttons {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ultra-v13-nav .btn:last-child,.ultra-plus-buttons .btn:last-child,.ultra-expansion-buttons .btn:last-child {grid-column:1/-1}
+  .pro-toolbar {width:100%}
+  .pro-actions {display:grid;width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .pro-actions .btn {font-size:clamp(10px,calc(11px * var(--ui-scale)),13px);min-height:43px;white-space:normal}
+  .ultra-section,.ultra-plus-section,.ultra-expansion,.ultra-v13 {padding:clamp(10px,2vw,16px)}
+  .ultra-actions {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(125px,100%),1fr));gap:7px}
+  .ultra-actions .btn {min-width:0;min-height:43px}
+  .wizard-controls,.wizard-fields {width:100%;min-width:0}
+  .wizard-fields {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr))}
+  .wizard-fields label {display:flex;min-width:0;flex-direction:column;align-items:stretch}
+  .wizard-fields input {width:100%;max-width:none}
+  .audit-summary {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .audit-stat:last-child {grid-column:auto}
+  .footer {font-size:11px;gap:8px}
+  .toast {right:max(10px,env(safe-area-inset-right));left:max(10px,env(safe-area-inset-left));max-width:none}
+  body[data-focus="true"] .layout > .panel {display:none}
+  body[data-focus="true"] .layout > .editor-panel {display:flex;width:100%;height:auto;min-height:65dvh;max-height:none}
+}
+/* Unusually narrow covers / 320px browsers: always retain usable tap targets. */
+@media (max-width:375px) {
+  .header-brand .brand-words > span {display:none}
+  .version {font-size:9px;padding:4px 6px}
+  .logo {min-width:38px;height:38px}
+  .studio-toolbar-controls {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .studio-toolbar-controls .btn {padding:7px 4px;font-size:11px}
+  .project-controls {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .project-controls #loadTemplateBtn {grid-column:1/-1}
+  .modal-choices {grid-template-columns:1fr}
+  .ultra-v13-nav,.ultra-plus-buttons,.ultra-expansion-buttons {grid-template-columns:1fr}
+  .ultra-v13-nav .btn:last-child,.ultra-plus-buttons .btn:last-child,.ultra-expansion-buttons .btn:last-child {grid-column:auto}
+  .block-fields {grid-template-columns:1fr}
+}
+/* Landscape phone: leave room for keyboard and editing, avoid forced short-height clipping */
+@media (max-height:510px) and (min-width:761px) {
+  :root {--panel-height:max(310px,calc(100dvh - 110px))}
+  .layout > .panel {min-height:300px}
+}
+@media (prefers-reduced-motion:reduce) {
+  html {scroll-behavior:auto}
+}
