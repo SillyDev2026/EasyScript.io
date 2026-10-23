@@ -415,6 +415,7 @@ function render(){
   renderList(project.blocks,$("workspace"));
   if(outputFrame){cancelAnimationFrame(outputFrame);outputFrame=0;}
   updateOutputs();updateHistory();persist();
+  workspaceUI?.refresh();
 }
 function download(filename,content,type){
   const blob=new Blob([content],{type});
@@ -490,7 +491,7 @@ function bindActions(){
   $("paletteSearch").addEventListener("input",palette);
   $("projectTitle").addEventListener("focus",checkpoint);
   $("projectTitle").addEventListener("input",event=>{project.title=event.target.value.slice(0,80);persist();});
-  $("language").addEventListener("change",event=>{checkpoint();project.language=event.target.value;updateOutputs();persist();updateHistory();palette();});
+  $("language").addEventListener("change",event=>{checkpoint();project.language=event.target.value;commitActive(workspace,project);updateOutputs();persist();updateHistory();palette();workspaceUI?.refresh();});
   $("loadTemplateBtn").addEventListener("click",()=>{
     if(project.blocks.length&&!confirm("Load a template? Your current blocks will be replaced."))return;
     const language=project.language;
