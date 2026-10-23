@@ -1,104 +1,94 @@
-# EasyScript.io — Visual scripting studio v0.5.0
+# EasyScript.io — v0.6.0 Luau-first visual scripting studio
 
-**Build real Luau and JavaScript by combining editable visual blocks.** This project is a static, privacy-friendly browser app with responsive layouts, local file management, and exportable scripts.
+[Launch EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [GitHub repository](https://github.com/SillyDev2026/EasyScript.io)
 
-**[Open EasyScript.io](https://sillydev2026.github.io/EasyScript.io/)** · [Repository](https://github.com/SillyDev2026/EasyScript.io)
+Build Roblox Luau and browser JavaScript using interactive blocks, local files, a responsive IDE, code previews and exports. No backend or account required.
 
-## New in v0.5 — 30+ improvements
+## v0.6: 128 block types
 
-### 18 new scripting blocks (36 total)
+- **36** established blocks for variables, logic, lists, text, flow, Roblox basics and functions.
+- **73 new Roblox-focused blocks:** instance hierarchy, players and humanoids, vectors and colors, signals and events, RemoteEvents, UI properties and clicks, safe starter DataStore reads/writes, HTTP JSON, tasks, and globals.
+- **19 new JavaScript blocks:** document queries, classes, text updates, localStorage, JSON, async fetch, event handlers and globals.
 
-| Category | New blocks |
-|---|---|
-| Math | Random integer, Clamp number |
-| Text | Join text, Text length |
-| Lists | Create list, Append item, Remove item, List size, For each |
-| Flow and functions | For number range, Return value, Break loop, Spawn parallel task |
-| Roblox events | Player leaving, Character spawned |
-| Roblox objects | Set attribute, Read attribute, Destroy instance |
+The block picker now supports language-aware filtering, explicit categories and full-catalog search. All new blocks have target-language output or an explicit unsupported-language comment and diagnostic.
 
-New blocks extend the generated Luau/JavaScript source where appropriate. Roblox-only blocks produce Luau and a warning/comment when JavaScript is selected. The browser simulator supports some new list/text/math/loop expressions but is **not a full Luau runtime**; unsupported blocks now report explicit messages rather than silently doing nothing.
+## Cleaner generated code
 
-### Workspace Explorer: many files in one project
+Assignments and expressions stay on a single physical line.
 
-- Create and switch among **up to 24 files** in one workspace.
-- File types: Script, LocalScript, ModuleScript, JavaScript.
-- Rename, duplicate, and delete individual files; at least one must remain.
-- Scrollable file tabs; Alt + 1 through Alt + 9 switches to the first nine files.
-- Each file retains its own blocks, language, and generated code.
-- The prior single-script editor autosaves into a new one-file workspace on upgrade.
-- Workspace data is stored locally. Export/import a complete **.easyscript-workspace.json** backup.
-- Export a **source manifest JSON** that contains generated code for every file, or copy all source text into the clipboard. A source manifest is **not a ZIP** and does not upload files to Roblox.
-- Individual project export and snapshots remain available for backward compatibility.
+~~~lua
+local Coins = 100
+local Color = Color3.fromRGB(255, 100, 50)
+local Players = game:GetService("Players")
+_G["Coins"] = (_G["Coins"] or 0) + (1)
+~~~
 
-### Editing improvements
+Pasted multiline expressions are flattened for output and reported in diagnostics. Nested blocks generate indentation and closing constructs. Misplaced Break/Return blocks emit explanatory comments instead of illegal control flow. Invalid arbitrary raw expressions still require developer review and may fail in Roblox Studio.
 
-- Copy an entire block subtree (including nested conditions or functions) and paste it into a different script file.
-- Paste after any block or at the end of the visual script.
-- Collapse and expand individual visual blocks to handle longer projects.
-- Four new templates: List Operations, Number Range, Roblox Attribute Door, Text Builder.
-- Existing template library, live diagnostics, undo/redo, drag/drop, block search, favorites, and themes remain.
+**Simple globals:** Set, Read, Increase and Clear shared globals. Luau uses _G["Name"]; JavaScript uses globalThis["Name"]. Luau _G is limited to its runtime context and **does not synchronize server and client**. ModuleScripts and RemoteEvents remain more appropriate for large shared systems.
 
-### Responsive studio from v0.4
+## Copy code and exports
 
-- Percentage-based desktop panel widths and tablet two-column layout.
-- Mobile Blocks / Workspace / Code tabs, including folded phone layouts.
-- Midnight/Daylight themes, comfortable/compact controls, focus mode.
-- Code line numbers, wrapping, layout reset, searchable structure.
-- Ultra tools: standalone Roblox System Builder, Structure Map, and a **static heuristic** Script Health Audit.
+- Copy current generated source from the output panel, with Ctrl/Cmd + Shift + C shortcut.
+- If clipboard access fails (including some mobile browsers), open a selectable, read-only manual copy dialog.
+- Copy all source code from the multi-file Explorer with the same fallback.
+- Download individual Luau/JavaScript scripts, project backups, 24-file workspace JSON backups, and all-file source manifests.
 
-## Get started
+## 9 additional editable starter packs (20 total)
 
-1. Choose a template or click **New file** to create a script.
-2. Insert blocks from the left library or use the Add button.
-3. Edit values and arrange nested blocks with drag/drop or move controls.
-4. Click **Manage files** to rename, duplicate, delete, or export the entire workspace.
-5. Use block **Copy** and **Paste** controls to reuse logic across scripts.
-6. Export generated code and **test it in the correct Roblox Studio context** (for Roblox LuaU scripts) or JavaScript runtime.
+Luau: Simple Globals, UI Button, Door Prompt, Player DataStore Read, Remote Reply, Vectors & Colors.
 
-## Development
+JavaScript: DOM Text, Local Storage, Fetch JSON.
 
-This is a zero-runtime-dependency static website. Node.js 20+ is recommended for checking and testing.
+These are editable blocks rather than opaque text. Examples are starting points, **not production security patterns**.
+
+## Existing and improved studio features
+
+- 24-file local Explorer with file switching, duplication, naming and deleting.
+- Reuse nested block subtrees across scripts.
+- Full responsive desktop percentage widths, tablet layout and mobile Blocks / Workspace / Code tabs.
+- Light/dark themes, compact mode, focus mode, favorites, recent blocks.
+- Syntax-colored code, line numbers, wrapping, diagnostics, limited simulation, local autosave.
+- Three Ultra utilities: Roblox System Builder, Script Structure Map and heuristic Script Audit.
+- Improved static audit analyzes the block hierarchy in a single traversal, including new warnings for expensive operations in per-frame event handlers.
+
+## Development and verification
+
+Runs as a static GitHub Pages site; Node.js 20+ is recommended for test commands.
 
 ~~~bash
 git clone https://github.com/SillyDev2026/EasyScript.io.git
 cd EasyScript.io
-python3 -m http.server 8080
-# Open http://localhost:8080
 npm run check
 npm test
+python3 -m http.server 8080
 ~~~
 
-### Project layout
+Visit http://localhost:8080.
 
-~~~text
-index.html
-styles.css
-src/app.js             Main editor + file switching
-src/engine.js          Core primitives, Luau/JS code generator, lint, simulation
-src/extended.js        18 new block definitions and generators
-src/workspace.js       Versioned local multi-file workspace
-src/workspace-ui.js    File Explorer, tabs, bundle import/export
-src/clipboard.js       Reusable block subtrees between files
-src/library.js         Local project snapshots
-src/highlight.js       Text-based, XSS-safe code coloring
-src/studio.js          Themes, responsive controls, Ultra UI
-src/ultra.js           Three Ultra tools and heuristics
-tests/*.test.js        Automated regression and compatibility tests
-~~~
+CI checks include source syntax checks and generator-wide coverage of **all 128 blocks**, parseable default JavaScript output, one-line assignment formatting, cross-language globals, DataStore temporary naming, legal nested Break/Return, workspace migration and clipboard operations.
 
-## Limitations and safeguards
+## Limitations
 
-- No accounts, online cloud sync, multiplayer editing, server execution, AI APIs, GitHub sync, or Roblox Studio plugin.
-- Projects are kept in browser localStorage. Clearing site data can erase them; export workspace backups regularly.
-- Imports are validated and limited in file count and size. Do not share projects containing private data.
-- Roblox event templates and scripts need context-appropriate placement and permissions/security validation in Roblox Studio.
-- Code expressions are editable raw source, not sandboxed by static diagnostics; exported scripts must be reviewed before execution.
-- The **simulation** is a small local evaluator and explicitly refuses Roblox engine operations.
-- The **Ultra audit** is a heuristic checker, not measured FPS, memory, latency, formal verification, or security auditing.
-- Visual blocks are movable/nestable cards with drop zones, not yet fully socket-connected Scratch/Blockly nodes.
-- No open-source license has been chosen yet.
+- Roblox API blocks only work in the correct Roblox Studio runtime and Script/LocalScript context; test all exports before use.
+- Browser simulation is intentionally limited. It is not Roblox and does not run arbitrary code.
+- Static diagnostics and heuristic audit are **not a performance profiler, security review, or formal validation**.
+- DataStore examples use basic protected calls, but not comprehensive retries, request budgets, data migrations, or durable save policies.
+- RemoteEvents require server authorization, validation, and rate limiting.
+- This is still a card-and-drop-zone editor, not yet fully socket-connected Scratch/Blockly.
+- No hosted AI, cloud login, real-time teamwork, or direct Roblox publishing.
+- Browser localStorage can disappear; export JSON backups.
+- No license selected yet.
 
-## Potential next stage
+## Key modules
 
-Full socket-based expression blocks; a Roblox Studio companion plugin; integrated multi-file dependency/require graph; optional authenticated cloud collaboration and secure publishing.
+- src/engine.js — script generator, diagnostics and limited simulator
+- src/roblox-blocks.js — extensive Roblox Luau catalog
+- src/javascript-blocks.js — browser JavaScript catalog
+- src/format.js — one-line expression formatting
+- src/packs.js — editable starter packs
+- src/code-copy.js — copy fallback
+- src/app.js — editor controls, category search
+- src/workspace.js and src/workspace-ui.js — multi-file projects
+- src/studio.js and src/ultra.js — responsive UI and Ultra tools
+- tests/ — generator and regression tests
