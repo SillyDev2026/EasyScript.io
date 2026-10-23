@@ -256,7 +256,7 @@ export function generate(project) {
         case "setProperty":lines.push(s+expression(f.target,"workspace")+
           "."+f.property+" = "+expression(f.value,"nil"));break;
         case "createPart": {
-          const name="part_"+b.id.replace(/\W/g,"").slice(-12);
+          const name=reserve(safeSymbol(f.name,"part"));
           lines.push(s+"local "+name+' = Instance.new("Part")');
           lines.push(s+name+".Name = "+quote(f.name));
           lines.push(s+name+".Anchored = true");
@@ -267,7 +267,7 @@ export function generate(project) {
         case "call":lines.push(s+(js?"await ":"")+f.name+"();");if(!js)lines[lines.length-1]=s+f.name+"()";break;
         case "function":lines.push(s+(js?"async function ":"local function ")+f.name+"()"+(js?" {":""));emit(b.body,level+1,childScope);lines.push(s+(js?"}":"end"));break;
         case "repeat":{
-          const varName="__index_"+b.id.replace(/\W/g,"");
+          const varName=reserve("index");
           lines.push(s+(js?"for (let "+varName+" = 0; "+varName+" < ("+expression(f.count,"0")+"); "+varName+"++) {":"for "+varName+" = 1, "+expression(f.count,"0")+" do"));
           emit(b.body,level+1,childScope);lines.push(s+(js?"}":"end"));break;
         }
