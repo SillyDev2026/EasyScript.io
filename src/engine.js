@@ -304,10 +304,10 @@ export function lint(project){
     }
   }
   checkScope(project.blocks);
-  function checkExtended(list,context={inLoop:false,inFunction:false,hasPlayer:false}){
+  function checkExtended(list,context={inLoop:false,inFunction:false,hasPlayer:false,depth:0}){
     for(let index=0;index<list.length;index++){
       const b=list[index];
-      if(b.type==="moduleReturn"&&(index!==list.length-1||context.inFunction)){
+      if(b.type==="moduleReturn"&&project.language==="luau"&&(index!==list.length-1||context.depth>0)){
         problems.push({id:b.id,severity:"error",message:"ModuleScript return must be the final top-level block."});
       }
       if(["returnValue","breakLoop"].includes(b.type)&&index!==list.length-1){
@@ -322,7 +322,8 @@ export function lint(project){
         checkExtended(b[key]||[],{
           inLoop:b.type==="function"?false:context.inLoop||["while","repeat","each","forRange"].includes(b.type),
           inFunction:context.inFunction||["function","playerJoined","playerLeaving","characterAdded","partTouched","remoteReceived","spawnTask"].includes(b.type),
-          hasPlayer:context.hasPlayer||["playerJoined","playerLeaving"].includes(b.type)
+          hasPlayer:context.hasPlayer||["playerJoined","playerLeaving"].includes(b.type),
+          depth:context.depth+1
         });
       }
     }
