@@ -1,7 +1,7 @@
 import {outlineProject,auditProject,generateRobloxSystem,SYSTEM_KINDS} from "./ultra.js";
 
 const PREFS_KEY="easyscript_studio_v4";
-const DEFAULTS={theme:"dark",density:"comfortable",left:22,right:31,wrap:false,lines:true,focus:false,mobile:"workspace",favorites:[],recent:[]};
+const DEFAULTS={theme:"dark",density:"comfortable",left:19,right:29,wrap:false,lines:true,focus:false,mobile:"workspace",favorites:[],recent:[]};
 const node=(tag,cls,text)=>{
   const el=document.createElement(tag);
   if(cls)el.className=cls;
@@ -12,8 +12,8 @@ function readPrefs(){
   try{
     const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");
     return {...DEFAULTS,...p,
-      left:Math.max(16,Math.min(30,Number(p.left)||22)),
-      right:Math.max(23,Math.min(42,Number(p.right)||31)),
+      left:Math.max(15,Math.min(31,Number(p.left)||19)),
+      right:Math.max(22,Math.min(42,Number(p.right)||29)),
       favorites:Array.isArray(p.favorites)?p.favorites.filter(x=>typeof x==="string").slice(0,30):[],
       recent:Array.isArray(p.recent)?p.recent.filter(x=>typeof x==="string").slice(0,8):[]};
   }catch{return {...DEFAULTS};}
@@ -26,7 +26,7 @@ export function mountStudio({getProject,notify,renderPalette}){
   toolbar.setAttribute("aria-label","Studio display and quick tools");
   toolbar.innerHTML=[
     '<div class="studio-toolbar-top">',
-    '<div class="studio-toolbar-title"><strong>Studio controls</strong><span>v0.4 · Responsive workspace</span></div>',
+    '<div class="studio-toolbar-title"><strong>Studio controls</strong><span>v0.7 · Adaptive workspace</span></div>',
     '<div class="studio-toolbar-controls">',
     '<label>Theme <select id="themeChoice"><option value="dark">Midnight</option><option value="light">Daylight</option></select></label>',
     '<label>Density <select id="densityChoice"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>',
@@ -34,8 +34,8 @@ export function mountStudio({getProject,notify,renderPalette}){
     '<button id="shortcutsBtn" class="btn compact ghost" type="button">Shortcuts ?</button>',
     '</div></div>',
     '<div class="studio-toolbar-bottom">',
-    '<label class="studio-size-control">Blocks <input id="leftSize" type="range" min="16" max="30" step="1"><output id="leftPercent">22%</output></label>',
-    '<label class="studio-size-control">Code <input id="rightSize" type="range" min="23" max="42" step="1"><output id="rightPercent">31%</output></label>',
+    '<label class="studio-size-control">Blocks <input id="leftSize" type="range" min="15" max="31" step="1"><output id="leftPercent">19%</output></label>',
+    '<label class="studio-size-control">Code <input id="rightSize" type="range" min="22" max="42" step="1"><output id="rightPercent">29%</output></label>',
     '<label class="studio-switch"><input id="lineToggle" type="checkbox"> Line numbers</label>',
     '<label class="studio-switch"><input id="wrapToggle" type="checkbox"> Wrap code</label>',
     '<div class="studio-jump"><input id="blockJump" type="search" placeholder="Find a block in this script…" aria-label="Find block in project" autocomplete="off"><div id="jumpResults" class="jump-results" hidden></div></div>',
@@ -97,7 +97,7 @@ export function mountStudio({getProject,notify,renderPalette}){
   $("wrapToggle").addEventListener("change",e=>{prefs.wrap=e.target.checked;apply();});
   $("focusModeBtn").addEventListener("click",()=>{prefs.focus=!prefs.focus;apply();});
   $("resetLayout").addEventListener("click",()=>{
-    Object.assign(prefs,{left:22,right:31,density:"comfortable",focus:false,wrap:false,lines:true});
+    Object.assign(prefs,{left:19,right:29,density:"comfortable",focus:false,wrap:false,lines:true});
     apply();notify("Layout reset");
   });
   toolbar.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
