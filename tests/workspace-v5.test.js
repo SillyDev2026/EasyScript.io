@@ -9,7 +9,7 @@ function memoryStorage(){
   return {getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,String(value))};
 }
 test("v0.5 exports 36 block types and 4 additional templates",()=>{
-  assert.equal(VERSION,"1.2.0");
+  assert.equal(VERSION,"1.3.0");
   assert.equal(Object.keys(DEFINITIONS).length,172);
   for(const key of ["list","loop","attributes","join"])assert.ok(projectTemplate(key).blocks.length);
 });
