@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {DEFINITIONS,projectTemplate,addBlock,generate,lint} from "../src/engine.js";
 import {createWorkspace,addFile} from "../src/workspace.js";
+import {workspaceZipEntries} from "../src/zip.js";
+import {bundleSources} from "../src/workspace.js";
 import {
  searchRobloxAPI,semanticReport,readinessReport,dataSchemaModule,
  parallelAdvice,mergeWorkspaces,aiPromptBundle,studioSourceManifest
@@ -117,4 +119,18 @@ test("custom SDK definitions can be saved then reloaded from browser-like storag
  const loaded=loadCustomDefinitions(storage,DEFINITIONS);
  assert.ok(loaded>=1);
  assert.ok(listCustomDefinitions().some(x=>x.id==="hello_saved"));
+});
+
+test("custom block definitions are included in ZIP and JSON workspace backups",()=>{
+ const raw={id:"portable_13",label:"Portable",fields:{amount:"42"},
+   luau:"print({{amount}})",javascript:"console.log({{amount}});"};
+ registerCustomDefinition(raw,DEFINITIONS);
+ const ws=createWorkspace(projectTemplate("blank"));
+ addBlock(ws.files[0].project,"custom_portable_13");
+ const entries=workspaceZipEntries(ws,bundleSources,generate,listCustomDefinitions());
+ const custom=entries.find(x=>x.name==="custom-blocks.json");
+ assert.ok(custom,"ZIP needs portable custom block definitions");
+ const editable=JSON.parse(entries.find(x=>x.name==="project.easyscript-workspace.json").data);
+ assert.ok(editable.customBlocks.some(x=>x.id==="portable_13"));
+ assert.match(generate(ws.files[0].project),/print\(42\)/);
 });
