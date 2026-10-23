@@ -5,8 +5,26 @@ const serialize=x=>JSON.stringify(x);
 function validated(source){
  return validateWorkspace(JSON.parse(serialize(source)));
 }
+const canonicalBlock=block=>{
+ const data={type:block.type,fields:block.fields};
+ if(block.disabled===true)data.disabled=true;
+ if(block.note)data.note=block.note;
+ if(block.expressions)data.expressions=block.expressions;
+ for(const key of ["body","then","else"])if(Array.isArray(block[key]))
+  data[key]=block[key].map(canonicalBlock);
+ return data;
+};
+const canonicalFile=file=>({
+ id:file.id,name:file.name,kind:file.kind,
+ project:{title:file.project.title,language:file.project.language,
+  blocks:file.project.blocks.map(canonicalBlock)}
+});
+const canonicalWorkspace=workspace=>({
+ schema:workspace.schema,name:workspace.name,activeId:workspace.activeId,
+ files:workspace.files.map(canonicalFile)
+});
 export function workspaceFingerprint(workspace){
- const text=serialize(validated(workspace));
+ const text=serialize(canonicalWorkspace(validated(workspace)));
  let h=2166136261;
  for(let i=0;i<text.length;i++){
   h^=text.charCodeAt(i);
@@ -21,7 +39,7 @@ export function reviewWorkspaceChanges(before,after){
  for(const file of a.files){
   const older=previous.get(file.id);
   if(!older)changes.push({kind:"added",name:file.name,id:file.id});
-  else if(serialize(older)!==serialize(file))
+  else if(serialize(canonicalFile(older))!==serialize(canonicalFile(file)))
    changes.push({kind:"modified",name:file.name,id:file.id,renamed:older.name!==file.name,oldName:older.name});
  }
  for(const file of b.files){
