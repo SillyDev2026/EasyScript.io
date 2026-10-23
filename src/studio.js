@@ -1,7 +1,8 @@
 import {outlineProject,auditProject,generateRobloxSystem,SYSTEM_KINDS} from "./ultra.js";
+import {normalizeLayoutPrefs,displayedPaneWidths,DEFAULT_LAYOUT} from "./responsive-layout.js";
 
 const PREFS_KEY="easyscript_studio_v4";
-const DEFAULTS={theme:"dark",density:"comfortable",left:19,right:29,wrap:false,lines:true,focus:false,mobile:"workspace",favorites:[],recent:[]};
+const DEFAULTS={theme:"dark",density:"comfortable",...DEFAULT_LAYOUT,wrap:false,lines:true,focus:false,mobile:"workspace",favorites:[],recent:[]};
 const node=(tag,cls,text)=>{
   const el=document.createElement(tag);
   if(cls)el.className=cls;
@@ -11,9 +12,11 @@ const node=(tag,cls,text)=>{
 function readPrefs(){
   try{
     const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");
-    return {...DEFAULTS,...p,
-      left:Math.max(15,Math.min(31,Number(p.left)||19)),
-      right:Math.max(22,Math.min(42,Number(p.right)||29)),
+    return {...DEFAULTS,...p,...normalizeLayoutPrefs(p),
+      theme:p.theme==="light"?"light":"dark",
+      density:p.density==="compact"?"compact":"comfortable",
+      mobile:["blocks","workspace","code"].includes(p.mobile)?p.mobile:"workspace",
+      focus:p.focus===true,wrap:p.wrap===true,lines:p.lines!==false,
       favorites:Array.isArray(p.favorites)?p.favorites.filter(x=>typeof x==="string").slice(0,30):[],
       recent:Array.isArray(p.recent)?p.recent.filter(x=>typeof x==="string").slice(0,8):[]};
   }catch{return {...DEFAULTS};}
@@ -26,7 +29,7 @@ export function mountStudio({getProject,notify,renderPalette}){
   toolbar.setAttribute("aria-label","Studio display and quick tools");
   toolbar.innerHTML=[
     '<div class="studio-toolbar-top">',
-    '<div class="studio-toolbar-title"><strong>Studio controls</strong><span>v1.3 · Adaptive workspace</span></div>',
+    '<div class="studio-toolbar-title"><strong>Studio controls</strong><span>v1.4 · Adaptive workspace</span><span id="screenMode" class="studio-mode" role="status">Desktop</span></div>',
     '<div class="studio-toolbar-controls">',
     '<label>Theme <select id="themeChoice"><option value="dark">Midnight</option><option value="light">Daylight</option></select></label>',
     '<label>Density <select id="densityChoice"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>',
@@ -34,8 +37,10 @@ export function mountStudio({getProject,notify,renderPalette}){
     '<button id="shortcutsBtn" class="btn compact ghost" type="button">Shortcuts ?</button>',
     '</div></div>',
     '<div class="studio-toolbar-bottom">',
-    '<label class="studio-size-control">Blocks <input id="leftSize" type="range" min="15" max="31" step="1"><output id="leftPercent">19%</output></label>',
-    '<label class="studio-size-control">Code <input id="rightSize" type="range" min="22" max="42" step="1"><output id="rightPercent">29%</output></label>',
+    '<label class="studio-size-control">Blocks <input id="leftSize" type="range" min="15" max="31" step="1" aria-label="Blocks pane width percentage"><output id="leftPercent">19%</output></label>',
+    '<label class="studio-size-control">Code <input id="rightSize" type="range" min="22" max="42" step="1" aria-label="Code pane width percentage"><output id="rightPercent">29%</output></label>',
+    '<span class="studio-editor-share" title="Remaining available workspace width">Editor <output id="centerPercent">52%</output></span>',
+    '<label class="studio-scale-control">UI scale <input id="uiScale" type="range" min="85" max="120" step="5" aria-label="Interface size percentage"><output id="uiScalePercent">100%</output></label>',
     '<label class="studio-switch"><input id="lineToggle" type="checkbox"> Line numbers</label>',
     '<label class="studio-switch"><input id="wrapToggle" type="checkbox"> Wrap code</label>',
     '<div class="studio-jump"><input id="blockJump" type="search" placeholder="Find a block in this script…" aria-label="Find block in project" autocomplete="off"><div id="jumpResults" class="jump-results" hidden></div></div>',
@@ -64,13 +69,20 @@ export function mountStudio({getProject,notify,renderPalette}){
     gutter.textContent=Array.from({length:n},(_,i)=>String(i+1)).join("\n");
     gutter.dataset.lines=String(n);
   }
+  function updateMode(){
+    const widths=displayedPaneWidths(window.innerWidth,prefs);
+    $("screenMode").textContent=widths.mode==="phone"?"Phone · 100% tabs":widths.mode==="tablet"?"Tablet · 2 panels":"Desktop · 3 panels";
+    document.body.dataset.layoutMode=widths.mode;
+  }
   function apply(){
+    Object.assign(prefs,normalizeLayoutPrefs(prefs));
     document.documentElement.dataset.theme=prefs.theme;
     document.body.dataset.density=prefs.density;
     document.body.dataset.focus=String(prefs.focus);
     document.body.dataset.mobileView=prefs.mobile;
     document.documentElement.style.setProperty("--left-pane",prefs.left+"%");
     document.documentElement.style.setProperty("--right-pane",prefs.right+"%");
+    document.documentElement.style.setProperty("--ui-scale",String(prefs.scale/100));
     pre.classList.toggle("wrapped-code",prefs.wrap);
     pre.classList.toggle("show-gutter",prefs.lines&&!prefs.wrap);
     $("themeChoice").value=prefs.theme;
@@ -79,6 +91,10 @@ export function mountStudio({getProject,notify,renderPalette}){
     $("rightSize").value=prefs.right;
     $("leftPercent").textContent=prefs.left+"%";
     $("rightPercent").textContent=prefs.right+"%";
+    $("centerPercent").textContent=(100-prefs.left-prefs.right)+"%";
+    $("uiScale").value=prefs.scale;
+    $("uiScalePercent").textContent=prefs.scale+"%";
+    updateMode();
     $("lineToggle").checked=prefs.lines;
     $("wrapToggle").checked=prefs.wrap;
     $("focusModeBtn").setAttribute("aria-pressed",String(prefs.focus));
@@ -93,11 +109,12 @@ export function mountStudio({getProject,notify,renderPalette}){
   $("densityChoice").addEventListener("change",e=>{prefs.density=e.target.value==="compact"?"compact":"comfortable";apply();});
   $("leftSize").addEventListener("input",e=>{prefs.left=Number(e.target.value);apply();});
   $("rightSize").addEventListener("input",e=>{prefs.right=Number(e.target.value);apply();});
+  $("uiScale").addEventListener("input",e=>{prefs.scale=Number(e.target.value);apply();});
   $("lineToggle").addEventListener("change",e=>{prefs.lines=e.target.checked;apply();});
   $("wrapToggle").addEventListener("change",e=>{prefs.wrap=e.target.checked;apply();});
-  $("focusModeBtn").addEventListener("click",()=>{prefs.focus=!prefs.focus;apply();});
+  $("focusModeBtn").addEventListener("click",()=>{prefs.focus=!prefs.focus;if(prefs.focus)prefs.mobile="workspace";apply();});
   $("resetLayout").addEventListener("click",()=>{
-    Object.assign(prefs,{left:19,right:29,density:"comfortable",focus:false,wrap:false,lines:true});
+    Object.assign(prefs,{...DEFAULT_LAYOUT,density:"comfortable",focus:false,wrap:false,lines:true});
     apply();notify("Layout reset");
   });
   toolbar.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
@@ -251,6 +268,7 @@ export function mountStudio({getProject,notify,renderPalette}){
       if(jump.value.trim()&&!results.hidden)showResults();
     },160);
   }
+  window.addEventListener("resize",updateMode,{passive:true});
   apply();updateGutter();
   return {
     isFavorite:type=>prefs.favorites.includes(type),
