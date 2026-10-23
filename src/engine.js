@@ -215,7 +215,10 @@ export function generate(project) {
         case "variable":lines.push(s+(js?"let ":"local ")+f.name+" = "+expression(f.value,js?"undefined":"nil")+(js?";":""));break;
         case "set":lines.push(s+f.name+" = "+expression(f.value,js?"undefined":"nil")+(js?";":""));break;
         case "increment":lines.push(s+f.name+" += "+expression(f.amount,"1")+(js?";":""));break;
-        case "service":lines.push(s+"local "+f.alias+" = game:GetService("+quote(f.service)+")");break;
+        case "service":
+          if((needsPlayers&&f.service==="Players"&&f.alias==="Players")||
+            (stores.size&&f.service==="DataStoreService"&&f.alias==="DataStoreService"))break;
+          lines.push(s+"local "+f.alias+" = game:GetService("+quote(f.service)+")");break;
         case "playerJoined":
           lines.push(s+'Players.PlayerAdded:Connect(function(player)');
           emit(b.body,level+1,childScope);lines.push(s+"end)");break;
