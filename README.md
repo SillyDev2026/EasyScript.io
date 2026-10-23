@@ -1,98 +1,90 @@
-# EasyScript.io
+# EasyScript.io — v0.4.0
 
-**Build real scripts visually.** EasyScript is a dependency-free visual scripting studio for beginners and Roblox developers. Combine blocks, adjust fields, watch readable Luau or JavaScript update instantly, then export your work.
+Build Luau and JavaScript visually on desktop, tablets, foldables and phones. The app remains a **static, dependency-free GitHub Pages site**, with local editing, optional browser-only project snapshots and exports.
 
-**Version:** v0.3.0
+- **Live site:** https://sillydev2026.github.io/EasyScript.io/
+- **Source:** https://github.com/SillyDev2026/EasyScript.io
 
-## Live website
+## 10 studio improvements in v0.4
 
-- GitHub Pages: https://sillydev2026.github.io/EasyScript.io/
-- Source repository: https://github.com/SillyDev2026/EasyScript.io
+1. **Percent-based panel sizing:** Adjust the block palette from 16–30% and the output from 23–42% of the wide-screen workspace.
+2. **Adaptive mobile workspaces:** Dedicated Blocks / Workspace / Code views on narrow screens, with layouts that also adapt to tablets.
+3. **Dark/daylight appearance:** Persistent theme preference, no remote stylesheet.
+4. **Compact or comfortable editing:** Choose panel/control density.
+5. **Focus mode:** Temporarily hide side panels for extra visual workspace room.
+6. **Favorite blocks:** Star commonly used blocks in the palette; remembers them locally.
+7. **Recent blocks:** Automatically surfaces recently inserted palette blocks.
+8. **Project-wide search:** Find existing blocks by name, type and fields, then jump to them.
+9. **Live code line numbers:** Toggle a line-number gutter.
+10. **Code wrapping:** Toggle wrapping for narrow screens and long expressions.
 
-## What's new in v0.3.0
+Bonus: Built-in shortcut help and reset-layout button, and more efficient render scheduling while typing.
 
-### Roblox-ready creation (Luau)
+## Three Ultra tools
 
-Nine new blocks added to the original nine primitives:
+### 1. Roblox System Builder
 
-| Block | Output |
-| --- | --- |
-| Change number | `Coins += 1` |
-| While condition | Guarded while condition with nested body |
-| Get Roblox service | `game:GetService(...)` |
-| Player joined | `Players.PlayerAdded:Connect(...)` |
-| Part touched | `.Touched:Connect(...)` |
-| Remote received (server) | `.OnServerEvent:Connect(...)` |
-| Create leaderstat | Folder and IntValue under player |
-| Set instance property | `workspace.Part.Transparency = 0.5` |
-| Create anchored part | `Instance.new("Part")` |
+Generate **standalone Luau Server Scripts** for a Speed Pad, Coin Pickup, or Checkpoint. Configure speed/duration, stat names, coin amounts and cooldowns. Copy or download the scripts. Scripts contain server-side checks, but must still be reviewed and tested in Roblox Studio.
 
-**Three new templates:** Roblox Leaderstats, Touch Detector, and Remote Validation. The original Purchase Check, Coin Counter, Function Demo, and Blank Project templates remain.
+This feature **does not** convert the generated system into visual blocks or automatically insert it into Roblox Studio.
 
-### Editor and quality-of-life
+### 2. Structure Map
 
-- Live, XSS-safe Luau/JavaScript syntax highlighting.
-- Click any diagnostic to navigate to the affected visual block.
-- Service picker for common Roblox services.
-- Improved touch targets and mobile editor layout.
-- **My projects** dialog: save, open, and delete up to 40 local project snapshots.
-- Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+Shift+L for project library, Ctrl/Cmd+Enter to simulate, Ctrl/Cmd+Z to undo.
-- Drag-and-drop insertion zones; tap controls for mobile.
-- JSON import/export and Luau/JavaScript downloads.
-- Undo/redo, nested blocks, block duplication, inline fields, live diagnostics.
-- Extended unit tests, including generated Roblox code, simulated loops, snapshot safety, and tokenization.
+An interactive, nested outline of your blocks and their branch hierarchy. Select any entry to jump to its position in the visual editor. This is an outline view, **not** a node-connection graph.
 
-## Usage
+### 3. Script Health & Performance Audit
 
-1. Choose **Language: Luau · Roblox** to use Roblox-native blocks.
-2. Select a template or start a blank project.
-3. Drag a block into a drop zone, or tap **Add a block**.
-4. Edit each field. Nest blocks inside conditions, functions, loops, or events.
-5. Inspect **Generated code** and **Diagnostics**.
-6. Save snapshots to **My projects**, download an editable `.easyscript.json` backup, or export `.luau` / `.js` source.
-7. Paste Roblox Luau exports into the correct kind of script in Roblox Studio and test them in the Roblox environment.
+Static warnings for unbounded `while` loops, large repeat counts, deep nesting, large projects and RemoteEvent security trust boundaries. Shows a heuristic health index, blocks, generated source lines, nesting depth, and event/loop counts. This is **not** an engine benchmark, security audit, or execution profiler.
 
-## Safety and limitations
+## Existing editor
 
-- **Browser-only:** no accounts, cloud synchronization, collaboration, AI APIs, or online Roblox engine execution.
-- **Simulator:** safely interprets a small set of literals, arithmetic, loops and function calls; it does not run your generated code or Roblox APIs. It enforces iteration/step limits.
-- **Roblox blocks:** available as generated Luau only; when switching to JavaScript, the generator substitutes informative comments and diagnostics warn about unsupported blocks.
-- **RemoteEvents:** client inputs are untrusted. The template and warnings remind developers to validate data and permissions; they do not implement application-specific security checks.
-- **Local snapshots:** stored in this browser's localStorage and can disappear if browser data is cleared. Export JSON backups.
-- **Visual model:** blocks are reorderable cards with nested drag/drop zones. These are not yet Blockly/Scratch-style connecting sockets.
-- **Code generation:** editable expressions are inserted into exported code as source; inspect and test scripts before deploying.
-- No source license has been selected; do not assume redistribution permissions.
+18 visual blocks, nested `if` / `while` / `repeat` / `function` / Roblox event branches, generated code and diagnostics, safe limited simulation of supported expressions, local project snapshots, import/export, multiple templates and undo/redo.
 
-## Local development
+## Layout and behavior
 
-Requires Node.js 20+ for testing. Website itself needs only a static web server.
+- Large screens: three fluid panels whose side-pane widths can be adjusted using percentage sliders.
+- Tablet/landscape: two columns with generated output below.
+- Narrow/folded mobile: full-width tabbed sections to make blocks and code readable without microscopic columns.
+- The layout accounts for viewport width using CSS grid, `clamp()`, `dvh`, and touch-friendly controls. Exact device testing may reveal further refinements.
+- Theme, density, favorites and layout preferences are saved **on this browser only**.
+
+## Development
+
+Requires Node.js 20+ to run tests; the website itself requires no package installation or backend.
 
 ```bash
 git clone https://github.com/SillyDev2026/EasyScript.io.git
 cd EasyScript.io
 python3 -m http.server 8080
-# Open http://localhost:8080
+# Then visit http://localhost:8080
 npm run check
 npm test
 ```
 
-## Architecture
+## Security and limitations
+
+- Avoid placing secrets in exported JavaScript or publicly shared project files.
+- LocalStorage is not a permanent backup. Download `.easyscript.json` copies of important projects.
+- The simulator is intentionally restricted and **does not** execute Roblox engine APIs or arbitrary exported scripts.
+- Roblox system wizard scripts are starting points, not production-ready game security. Test server/client behavior in Roblox Studio.
+- AI assistance, multiplayer editing, online persistence, a proper Roblox Studio plugin, socket-connecting blocks, and production performance measurements are not yet implemented.
+- **No license is currently selected.** Do not assume redistribution rights.
+
+## File layout
 
 ```text
-index.html              Editor and dialogs
-styles.css              Responsive layout
-src/app.js              Visual editor and interactions
-src/engine.js           Schema, generators, lint and limited simulation
-src/highlight.js        Safe token-based syntax highlighting
-src/library.js          Multi-project snapshot storage
-tests/*.test.js         Node.js regression tests
-.github/workflows/ci.yml Automated checks on push
+index.html             HTML shell and editor
+styles.css             Responsive, percentage-based themes and tools
+src/app.js             Main block editor and event handlers
+src/engine.js          Blocks, exports, lint and limited simulation
+src/studio.js          Studio preferences, palette, mobile views and Ultra UI
+src/ultra.js           Pure system generator, outline and static audit
+src/library.js         Browser-only project snapshots
+src/highlight.js       Safe output token coloring
+tests/*.test.js        Node built-in test runner
+.github/workflows/ci.yml  GitHub Actions verification
 ```
 
-## Next milestones
+## Next direction
 
-- **v0.4:** socket-based Blockly-style expressions, typed input connectors, and richer script validation.
-- **v0.5:** project Explorer with multiple script files, LuaU editor enhancements, and local version diffs.
-- **v0.6+:** optional authenticated accounts, GitHub sync, collaborative editing, curated community templates, and a Roblox Studio companion plugin.
-
-**License:** none selected yet.
+v0.5: Full node-connected visual values, separate script files per project and stronger Luau typing assistance. Future online sharing or AI assistance would require a backend and suitable authentication/rate limiting.
