@@ -224,7 +224,7 @@ body[data-focus="true"] .layout > .editor-panel {width:100%;max-width:100%;heigh
   body[data-mobile-view="code"] .layout > .result-panel {display:flex;flex-direction:column}
   body[data-mobile-view="workspace"] .layout > .editor-panel {min-height:clamp(390px,68dvh,760px);max-height:none;height:auto}
   .workspace {flex:initial;min-height:clamp(300px,52dvh,650px);max-height:min(70dvh,800px);overflow:auto;padding-inline:clamp(9px,2vw,16px)}
-  body[data-mobile-view="blocks"] .palette-groups {flex:initial;max-height:64dvh;min-height:0;overflow-y:auto}
+  body[data-mobile-view="blocks"] .palette-groups {display:block;grid-template-columns:none;flex:initial;max-height:64dvh;min-height:0;overflow-y:auto}
   body[data-mobile-view="code"] .result-panel {min-height:clamp(320px,60dvh,760px)}
   .result-content {min-height:190px;flex:1 1 0;overflow:hidden}
   .code-scroller {min-height:250px;max-height:62dvh;height:auto;flex:1 1 0;overflow:auto}
