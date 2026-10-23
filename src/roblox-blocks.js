@@ -16,16 +16,16 @@ const getter=(id,name,group,fields,get)=>register(id,name,group,fields,(f,s)=>as
 const event=(id,name,group,fields,signal,args="")=>register(id,name,group,fields,
   (f,s,emit,b)=>[s+signal(f)+":Connect(function("+args+")",...emit(b.body,Math.round(s.length/4)+1),s+"end)"],["body"]);
 
-// Beginner-friendly explicit globals: _G is not synchronized across server/client.
-register("globalWrite","Set shared global","Globals",{key:"Coins",value:"0"},(f,s)=>[
-  s+"_G["+q(f,"key")+"] = "+e(f,"value")
+// Script-scoped locals are declared once by the main Luau generator.
+register("globalWrite","Set script variable","Globals",{key:"Coins",value:"0"},(f,s,emit,b,ctx)=>
+  ctx?.initialGlobalWrites?.has(b.id)?[]:[s+f.key+" = "+e(f,"value")]);
+register("globalRead","Read script variable","Globals",{name:"Coins",key:"Coins",fallback:"0"},(f,s)=>
+  f.name===f.key?[s+f.name+" = "+f.name+" or "+e(f,"fallback","nil")]:
+  [s+"local "+f.name+" = "+f.key+" or "+e(f,"fallback","nil")]);
+register("globalIncrease","Increase script variable","Globals",{key:"Coins",amount:"1"},(f,s)=>[
+  s+f.key+" = ("+f.key+" or 0) + ("+e(f,"amount","0")+")"
 ]);
-register("globalRead","Read shared global","Globals",{name:"Coins",key:"Coins",fallback:"0"},(f,s)=>assign(f.name,
-  "_G["+q(f,"key")+"]",s).concat([s+"if "+f.name+" == nil then "+f.name+" = "+e(f,"fallback","nil")+" end"]));
-register("globalIncrease","Increase shared global","Globals",{key:"Coins",amount:"1"},(f,s)=>[
-  s+"_G["+q(f,"key")+"] = (_G["+q(f,"key")+"] or 0) + ("+e(f,"amount","0")+")"
-]);
-register("globalDelete","Clear shared global","Globals",{key:"Coins"},(f,s)=>[s+"_G["+q(f,"key")+"] = nil"]);
+register("globalDelete","Clear script variable","Globals",{key:"Coins"},(f,s)=>[s+f.key+" = nil"]);
 
 // Instance hierarchy
 getter("instanceFind","Find child","Instances",{name:"Found",target:"workspace",child:"Part"},f=>
@@ -190,31 +190,36 @@ getter("getAttributeChildren","Get attributes map","Data",{name:"Attributes",tar
 
 // DataStore practices: async calls must be protected and servers only.
 // Generated source explicitly uses pcall and provides ok and result locals.
-register("datastoreGet","DataStore GetAsync (server)","Data",{name:"Value",storeName:"PlayerDataV1",key:'tostring(player.UserId)'},(f,s)=>{
-  const store=f.name+"Store",ok=f.name+"Ok";
+register("datastoreGet","DataStore GetAsync (server)","Data",{name:"Value",storeName:"PlayerDataV1",key:'tostring(player.UserId)'},(f,s,emit,b,ctx)=>{
+  const store=ctx?.stores?.get(f.storeName)||'game:GetService("DataStoreService"):GetDataStore('+q(f,"storeName")+')';
+  const success=ctx?.reserve?.("success")||"success";
   return [
-    s+'local '+store+' = game:GetService("DataStoreService"):GetDataStore('+q(f,"storeName")+")",
-    s+"local "+ok+", "+f.name+" = pcall(function()",
+    s+"local "+success+", "+f.name+" = pcall(function()",
     s+"    return "+store+":GetAsync("+e(f,"key")+")",
     s+"end)",
-    s+"if not "+ok+" then warn("+f.name+"); "+f.name+" = nil end"
+    s+"if not "+success+" then",
+    s+'    warn("Failed to load data:", '+f.name+")",
+    s+"    "+f.name+" = nil",
+    s+"end"
   ];
 });
-register("datastoreSet","DataStore SetAsync (server)","Data",{storeName:"PlayerDataV1",key:'tostring(player.UserId)',value:"Coins"},(f,s,emit,b)=>{
-  const token="es_"+String(b.id).replace(/[^a-zA-Z0-9_]/g,"_");
+register("datastoreSet","DataStore SetAsync (server)","Data",{storeName:"PlayerDataV1",key:'tostring(player.UserId)',value:"Coins"},(f,s,emit,b,ctx)=>{
+  const store=ctx?.stores?.get(f.storeName)||'game:GetService("DataStoreService"):GetDataStore('+q(f,"storeName")+')';
+  const ok=ctx?.reserve?.("saveSuccess")||"saveSuccess",err=ctx?.reserve?.("saveError")||"saveError";
   return [
-    s+"local "+token+'Store = game:GetService("DataStoreService"):GetDataStore('+q(f,"storeName")+")",
-    s+"local "+token+"Ok, "+token+"Err = pcall(function()",
-    s+"    "+token+"Store:SetAsync("+e(f,"key")+", "+e(f,"value")+")",
+    s+"local "+ok+", "+err+" = pcall(function()",
+    s+"    "+store+":SetAsync("+e(f,"key")+", "+e(f,"value")+")",
     s+"end)",
-    s+"if not "+token+"Ok then warn("+token+"Err) end"
+    s+"if not "+ok+" then",
+    s+'    warn("Failed to save data:", '+err+")",
+    s+"end"
   ];
 });
 
 // Factories do not use eval and never output implicit newlines inside assignments.
-export const ROBLOX_DEFINITIONS=Object.fromEntries(Object.entries(table).map(([k,v])=>[k,k.startsWith("global")?{...v.definition,group:"Variables · Globals",color:"purple"}:v.definition]));
+export const ROBLOX_DEFINITIONS=Object.fromEntries(Object.entries(table).map(([k,v])=>[k,k.startsWith("global")?{...v.definition,group:"Variables · Script locals",color:"purple"}:v.definition]));
 export const ROBLOX_TYPES=new Set(Object.keys(table));
-export function robloxCode(block,language,level,emit){
+export function robloxCode(block,language,level,emit,ctx={}){
   const entry=table[block.type];
   if(!entry)return null;
   const s="    ".repeat(level);
@@ -231,7 +236,7 @@ export function robloxCode(block,language,level,emit){
     if(block.type==="globalDelete")return [s+"delete globalThis["+key+"];"];
     return [s+"// Roblox-only block: "+entry.definition.name+" (switch to Luau)"];
   }
-  return entry.build(block.fields,s,emit,block);
+  return entry.build(block.fields,s,emit,block,ctx);
 }
 export function robloxDiagnostics(block,language,context={}){
   const entry=table[block.type];if(!entry)return [];
@@ -250,8 +255,11 @@ export function robloxDiagnostics(block,language,context={}){
   const identifierFields=new Set(["name"]);
   for(const key of identifierFields)if(key in f&&!identifierOK(f[key]))issue("Invalid output name: "+f[key]);
   if(block.type==="humanoidState"&&!identifierOK(f.state))issue("Invalid Humanoid state");
-  if(block.type==="globalWrite"||block.type==="globalRead"||block.type==="globalIncrease"||block.type==="globalDelete")
-    issue("_G is shared only inside the same Luau execution environment, not across server/client. Prefer ModuleScripts or RemoteEvents for larger systems.","warning");
+  if(["globalWrite","globalRead","globalIncrease","globalDelete"].includes(block.type)){
+    if(!identifierOK(f.key))issue("Script variable names must be valid Luau identifiers: "+f.key);
+    if("name" in f&&!identifierOK(f.name))issue("Invalid script variable name: "+f.name);
+    if(language==="luau")issue("Script locals are visible only in this script, not shared across scripts or server/client.","warning");
+  }
   if(block.type.startsWith("datastore"))issue("DataStore requests are server-only; handle budgets, retries, schema and successful writes in production.","warning");
   if(["remoteInvokeServer","remoteFireServer","eventRenderStep","playerLocal","remoteClientEvent"].includes(block.type))
     issue("This API should run in a LocalScript on the client.","warning");
