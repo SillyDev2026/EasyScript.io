@@ -2,6 +2,8 @@ import {activeFile,chooseFile,addFile,removeFile,renameFile,duplicateFile,valida
 import {generate} from "./engine.js";
 import {copyCodeWithFallback,createCopyFallback} from "./code-copy.js";
 import {mountWorkspaceV1} from "./v1-workspace-ui.js";
+import {DEFINITIONS} from "./engine.js";
+import {listCustomDefinitions,registerCustomDefinition,saveCustomDefinitions,validateCustomDefinition} from "./custom-blocks.js";
 
 const el=(tag,className="",text)=>{
   const node=document.createElement(tag);
@@ -15,7 +17,7 @@ const download=(filename,content,mime)=>{
   const a=el("a");a.href=url;a.download=filename;document.body.append(a);
   a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
 };
-export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify,commitNow}){
+export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify,commitNow,refreshPalette=()=>{}}){
   const bar=el("nav","file-tabbar");
   bar.setAttribute("aria-label","Project files");
   const tabs=el("div","file-tabs");tabs.setAttribute("role","tablist");tabs.setAttribute("aria-label","Open script files");
@@ -106,7 +108,7 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
   });
   exportButton.addEventListener("click",()=>{
     commitNow();const ws=getWorkspace();
-    download(safeName(ws.name)+".easyscript-workspace.json",JSON.stringify(ws,null,2),"application/json");
+    download(safeName(ws.name)+".easyscript-workspace.json",JSON.stringify({...ws,customBlocks:listCustomDefinitions()},null,2),"application/json");
     notify("Workspace backup exported");
   });
   importButton.addEventListener("click",()=>input.click());
@@ -115,6 +117,12 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
     try{
       if(file.size>4_000_000)throw new Error("Workspace backup exceeds 4 MB");
       const data=JSON.parse(await file.text());
+      const incomingCustom=Array.isArray(data.customBlocks)?data.customBlocks.slice(0,30).map(validateCustomDefinition):[];
+      if(incomingCustom.length){
+        for(const definition of incomingCustom)registerCustomDefinition(definition,DEFINITIONS);
+        saveCustomDefinitions(localStorage);
+        refreshPalette();
+      }
       const ws=validateWorkspace(data);
       if(!confirm("Replace current workspace with "+ws.files.length+" imported files? Export your existing workspace first."))return;
       updateWorkspace(ws);
