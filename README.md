@@ -1,65 +1,62 @@
-# EasyScript.io v1.0.1
+# EasyScript.io v1.2.0 — Luau + JavaScript expansion
 
-**A browser-based, Luau-first visual scripting studio** with 131 script blocks, a multi-file project workspace, code generation and responsive mobile editing.
+**A responsive, browser-only visual scripting editor for Roblox Luau and JavaScript.**
 
-[Launch EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [Source on GitHub](https://github.com/SillyDev2026/EasyScript.io)
+[Open EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [GitHub repository](https://github.com/SillyDev2026/EasyScript.io)
 
-## What changed between v0.7 and v1.0
+## What's new
 
-### v0.8 foundations: visual expression composition
+This release makes substantial progress on the proposed 50 standard + 26 Ultra feature roadmap. It does **not** claim that all 76 requested capabilities are fully implemented: cloud collaboration, direct Studio integration, runtime profiling, AI assistance and full bidirectional Luau parsing require additional systems.
 
-- **Typed expression composer** beside compatible block fields. Select a number, text, boolean, variable, operator, condition, random value, or Roblox Vector3.
-- Build nested values in expandable **operand slots**; the generated expression previews live and is compiled for Luau or JavaScript.
-- Type validation flags number/boolean/string mismatches and invalid identifiers. No use of eval or Function.
-- The original raw-expression input is retained for existing scripts and advanced code.
-- Expressions are inserted as source strings into the current field; the structured editor tree is not yet persisted as a draggable canvas.
+### 172 block types
 
-### v0.9 foundations: linked multi-file projects and portable bundles
+The catalog now contains **172 editable block types**, including **26 new Luau APIs** and **15 new JavaScript APIs**.
 
-- **Require ModuleScript**, **ModuleScript return**, and **Import JavaScript module** blocks. The catalog now has **131 block types**.
-- Workspace dependency analysis shows imports, missing targets, cycles, invalid targets and file diagnostics.
-- **Actual ZIP exports**, built in the browser with no CDN. A ZIP contains separate generated Luau/JavaScript files in a scripts/ folder, a manifest, a README and a workspace JSON backup.
-- The module graph is static and checks names only; it does not install modules, execute code, or auto-publish to Roblox.
+**New Roblox Luau blocks:** raycasting and RaycastParams; overlap box queries; TweenInfo; load animation tracks; play/stop sounds; CollectionService tags; collision group assignment; humanoid MoveTo; a waypoint traversal scaffold; BindableEvents and BindableFunctions; RemoteFunction server/client callbacks; protected DataStore UpdateAsync; MemoryStore queue and sorted map handles; HttpService RequestAsync; Debris cleanup; NumberSequence, ColorSequence and property-change events.
 
-### v1.0 reliability and project completion
+**New JavaScript blocks:** create, append and remove DOM elements; set inline styles, toggle classes, read/write datasets, subscribe to named events, interval callbacks, Date.now, URL pathname, fetch text, URL parsing, history.replaceState and get DOM attributes.
 
-- **Local recovery history** stores up to eight rolling snapshots, throttled and size-bounded to avoid interfering with autosave. Reopen them from Manage files → Recovery.
-- Improved safeguards for ModuleScript return placement; invalid output is replaced by a diagnostic comment rather than an invalid return statement.
-- Syntax checking of every new module in GitHub Actions, plus dedicated tests for expression output, module cycles, recovery and ZIP entry integrity.
-- The v0.7 UX is preserved: 24-file explorer, cross-file block clipboard, themes, adaptive three-column sizing, mobile tabs, nested branches, syntax highlighting and copy-code fallbacks.
-- All eight Ultra tools remain: System Builder, Structure Map, Script Audit, Code Style, Variable Explorer, Service Explorer, Runtime Checklist and Snapshot Compare.
+Many APIs require server/client placement, engine permissions, network authorization, defensive nil checks or proper quotas in Roblox Studio. Blocks produce starting-point code, not a validated game architecture. The browser simulator intentionally does not execute Roblox engine calls.
 
-## Use the new features
+### Stronger typed Luau
 
-1. Open a Luau or JavaScript project and choose a block with an expression input.
-2. Select **◇ Build** next to the field. Change the node type, fill its left/right/child slots and select **Use this expression**.
-3. To work across files, choose **Manage files** → **New file** and create a ModuleScript or JavaScript file.
-4. Add a **Require ModuleScript** or **Import JavaScript module** block; use **Module graph** in Manage files to inspect connections.
-5. Choose **Download scripts ZIP** to download individual scripts plus an editable backup.
-6. Use **Save restore point** or **Recovery** in Manage files for local restore points, and periodically export ZIP/JSON backups.
+- Variable blocks accept an optional Luau type annotation, e.g. \`local Coins: number = 100\`.
+- Functions now accept parameter declarations, optional Luau return types and call arguments.
+- Diagnostics flag malformed/duplicate parameters and use of Luau annotations in JavaScript.
+- New DataStore UpdateAsync blocks reuse hoisted DataStore handles. Multiple pathfinding/DataStore blocks receive readable, collision-safe local names.
 
-## Example: readable Roblox leaderstats
+### Six interactive editor productivity tools
 
-~~~lua
-local Players = game:GetService("Players")
+- **Bulk edit:** select root/nested blocks, duplicate, delete, disable and enable. Disabled state survives JSON project backups.
+- **Variable explorer/refactor:** find variables and conservatively rename simple identifiers and expression references. Review the resulting source; dynamic references are not fully understood.
+- **Local snippets:** save selected block trees and reinsert copies in compatible projects.
+- **Bookmarks and notes:** mark blocks and attach up to 300 characters of developer notes.
+- **Diagnostic filters:** view errors, warnings and jump to their blocks.
+- **Code minimap:** browse up to 250 non-comment generated source lines.
 
-Players.PlayerAdded:Connect(function(player)
-    local leaderstats = Instance.new("Folder")
-    leaderstats.Name = "leaderstats"
-    leaderstats.Parent = player
+### Five new offline Ultra Labs
 
-    local coins = Instance.new("IntValue")
-    coins.Name = "Coins"
-    coins.Value = 0
-    coins.Parent = leaderstats
-end)
-~~~
+These add to the existing eight Ultra tools, for **13 available Ultra tools/labs** overall.
 
-Script-scoped variables use ordinary locals rather than Luau's _G table. Cross-script state is not implicit: modules and networking require appropriate Roblox Script/LocalScript architecture.
+1. **Remote guard generator** — produces a server-side RemoteEvent handler with type/range validation, per-player cooldown and cleanup; authorization logic remains application-specific.
+2. **GUI builder** — generates a ScreenGui + Frame + TextButton example for a LocalScript.
+3. **DataStore retry simulator** — local, deterministic success/failure demonstration, not a real DataStore budget simulation.
+4. **Static security review** — surfaces potentially risky remotes, data operations and code diagnostics, not a runtime audit.
+5. **Luau assertion template** — generates a simple numeric assertion script as a test starting point.
 
-## Development
+Existing Ultra features: Roblox System Builder, Structure Map, Script Health Audit, Code Style Studio, Variable Explorer, Service Explorer, Runtime Checklist and Version Compare.
 
-The app is a static site without JavaScript runtime dependencies or a server. Node.js 20+ is recommended for tests.
+### Responsive redesign and quality
+
+- New compact editor toolbar and Ultra Lab sections use grid/flex breakpoints on wide monitors, tablets and folded phones.
+- Touch-friendly controls and scrollable modals aim to reduce overflow on compact devices.
+- No remote libraries or CDN required for the static app.
+
+## Project support
+
+The 24-file workspace, ZIP script export, project recovery, JSON import/export, expression composer, syntax-colored code, code-copy fallback, snapshots, local autosave, mobile workspace tabs and existing templates remain available.
+
+## Run locally
 
 ~~~bash
 git clone https://github.com/SillyDev2026/EasyScript.io.git
@@ -69,27 +66,16 @@ npm test
 python3 -m http.server 8080
 ~~~
 
-### New v1 modules
+Then open http://localhost:8080.
 
-- src/expressions.js — typed expression AST and Luau/JavaScript compilation
-- src/expression-ui.js — accessible nested-slot expression dialog
-- src/project-blocks.js — ModuleScript and JavaScript import blocks
-- src/project-graph.js — missing-module and dependency-cycle diagnostics
-- src/zip.js — portable ZIP32 writer and script bundles
-- src/recovery.js — size-limited local recovery snapshots
-- src/v1-workspace-ui.js — ZIP, module graph and recovery controls
-- tests/v1-features.test.js — new v1 regression suite
+The CI pipeline checks JS syntax and runs automatic regressions including new Luau/JS emitters, type annotations, copy/paste, selection, bookmarks, snippets, DataStore hoisting, security snippets and deterministic retry simulation.
 
-Existing block engine, project files, Ultra tools and styling remain in their existing modules.
+## Remaining roadmap (not shipped)
 
-## Important boundaries
+- Full visual snap-to-socket Blockly mechanics, AST-backed editable source, and bidirectional code ↔ blocks conversion.
+- A Roblox Studio companion plugin, live Studio runtime profiling, debugger connection, true Luau semantic analysis and Studio output synchronization.
+- Optional authenticated GitHub sync, cloud storage, real-time collaboration and AI coding assistance.
+- Trusted deployment/publishing flows, automatic secure schema migrations, production DataStore budget measurements, real permission review.
+- True browser/device cross-testing and Luau runtime validation; CI cannot guarantee every Roblox block combination executes in Studio.
 
-- EasyScript does not run Roblox Studio, publish to Roblox, or execute LuaU source in the browser.
-- The v1 expression composer uses nested selectable slots. It is **not yet a fully draggable Scratch/Blockly-style connection engine**.
-- Expression type checking is basic; raw user-entered expressions are not fully validated or sandboxed.
-- The ZIP exporter uses standard uncompressed ZIP32, so files may not shrink in size.
-- The static dependency analyzer matches relative names and does not resolve all Roblox runtime instance paths.
-- Recovery and regular saved projects use browser storage and can vanish if browser site data is cleared. Always download backups.
-- AI assistants, online accounts, cloud synchronization, multiplayer editing, a Roblox Studio companion plugin and GitHub sync are **not implemented** in v1.
-- Server-side DataStore and RemoteEvent security depend on your game code; exported examples are educational and must be tested.
-- No open-source license has been selected for this repository.
+There is **no server**, no login and no hosted AI in this release. Local browser storage is not a durable backup; download your workspace ZIP/JSON before clearing browser data.
