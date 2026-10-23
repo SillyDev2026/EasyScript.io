@@ -94,7 +94,7 @@ export function dataSchemaModule(name,fields){
   if(!types.has(x.type))throw new Error("Unsupported schema field type: "+x.type);
   seen.add(x.name);
   const value=x.type==="number"?Number(x.default):
-   x.type==="boolean"?Boolean(x.default):String(x.default??"");
+   x.type==="boolean"?(x.default===true||String(x.default).toLowerCase()==="true"):String(x.default??"");
   if(x.type==="number"&&!Number.isFinite(value))throw new Error("Number defaults must be finite");
   return {name:x.name,type:x.type,value};
  });
@@ -150,7 +150,7 @@ export function mergeWorkspaces(base,incoming){
    const extension=/\.(js|luau)$/i.exec(name)?.[0]||"";
    const stem=extension?name.slice(0,-extension.length):name;
    let n=2;
-   while(taken.has(name.toLowerCase())){name=stem+"-imported-"+n+++extension;renamed++;}
+   while(taken.has(name.toLowerCase())){name=stem+"-imported-"+(n++)+extension;renamed++;}
   }
   const imported=JSON.parse(JSON.stringify(file));
   imported.id="merged_"+(added+1)+"_"+Date.now().toString(36);
