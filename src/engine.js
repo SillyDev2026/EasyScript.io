@@ -56,8 +56,8 @@ export function projectTemplate(template = "starter") {
   }
   if(template==="leaderstats"){
     p.title="Roblox Leaderstats";p.language="luau";
-    const event=newBlock("playerJoined"),stat=newBlock("leaderstat"),msg=newBlock("print");
-    msg.fields.value='"Player joined!"';event.body.push(stat,msg);p.blocks.push(event);return p;
+    const event=newBlock("playerJoined"),stat=newBlock("leaderstat");
+    event.body.push(stat);p.blocks.push(event);return p;
   }
   if(template==="touch"){
     p.title="Roblox Touch Detector";p.language="luau";
@@ -144,7 +144,7 @@ export function generate(project) {
     if(["datastoreGet","datastoreSet"].includes(b.type)){
       const name=String(b.fields.storeName||"PlayerDataV1");
       if(!stores.has(name)){
-        const base=safeSymbol(name.replace(/V\\d+$/i,""),"playerData")+"Store";
+        const base=safeSymbol(name.replace(/V\d+$/i,""),"playerData")+"Store";
         stores.set(name,uniqueGlobal(base,preambleUsed));
       }
     }
