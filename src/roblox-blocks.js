@@ -218,14 +218,26 @@ export function robloxCode(block,language,level,emit){
   const entry=table[block.type];
   if(!entry)return null;
   const s="    ".repeat(level);
-  if(language==="javascript")return [s+"// Roblox-only block: "+entry.definition.name+" (switch to Luau)"];
+  if(language==="javascript"){
+    const f=block.fields,key=JSON.stringify(String(f.key??""));
+    if(block.type==="globalWrite")return [s+"globalThis["+key+"] = "+inlineExpression(f.value,"undefined")+";"];
+    if(block.type==="globalRead")return [
+      s+"let "+f.name+" = globalThis["+key+"];",
+      s+"if ("+f.name+" == null) "+f.name+" = "+inlineExpression(f.fallback,"undefined")+";"
+    ];
+    if(block.type==="globalIncrease")return [
+      s+"globalThis["+key+"] = Number(globalThis["+key+"] ?? 0) + Number("+inlineExpression(f.amount,"0")+");"
+    ];
+    if(block.type==="globalDelete")return [s+"delete globalThis["+key+"];"];
+    return [s+"// Roblox-only block: "+entry.definition.name+" (switch to Luau)"];
+  }
   return entry.build(block.fields,s,emit,block);
 }
 export function robloxDiagnostics(block,language,context={}){
   const entry=table[block.type];if(!entry)return [];
   const issues=[],f=block.fields;
   const issue=(message,severity="error")=>issues.push({id:block.id,message,severity});
-  if(language==="javascript")issue("Roblox block is Luau-only: "+entry.definition.name,"warning");
+  if(language==="javascript"&&!block.type.startsWith("global"))issue("Roblox block is Luau-only: "+entry.definition.name,"warning");
   for(const key of Object.keys(entry.definition.fields)){
     if(/[\r\n]/.test(String(f[key]??"")))issue("Field "+key+" must be a single line");
     if(f[key]===undefined||!String(f[key]).trim())issue("Missing field: "+key);
