@@ -5,6 +5,7 @@ import {mountStudio} from "./studio.js";
 import {loadWorkspace,saveWorkspace,activeFile,commitActive,chooseFile} from "./workspace.js";
 import {mountWorkspaceUI} from "./workspace-ui.js";
 import {copyBlockTree,pasteBlockTree,clipboardAvailable,countBlockTree} from "./clipboard.js";
+import {copyCodeWithFallback,createCopyFallback} from "./code-copy.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -118,7 +119,7 @@ function make(tag,className,textContent) {
   return n;
 }
 function iconFor(type){
-  const span=make("span","palette-icon "+DEFINITIONS[type].color,icons[type]);
+  const span=make("span","palette-icon "+DEFINITIONS[type].color,icons[type]||"◈");
   span.setAttribute("aria-hidden","true");
   return span;
 }
@@ -136,11 +137,14 @@ function paletteButton(type,onPick){
 }
 function palette(){
   const query=$("paletteSearch").value.trim().toLowerCase();
+  const category=$("paletteCategory").value;
+  const matchingGroup=group=>category==="all"||category===group||(category==="relevant"&&(query||!(project.language==="luau"?group.startsWith("JavaScript"):group.startsWith("Roblox"))));
   const parent=$("palette");parent.replaceChildren();
   const groups=[...new Set(Object.values(DEFINITIONS).map(x=>x.group))];
   const matches=type=>(DEFINITIONS[type].name+" "+DEFINITIONS[type].group+" "+type).toLowerCase().includes(query);
   let total=0;
   function addPaletteGroup(title,types){
+    if(!matchingGroup(title)&&!["★ Favorites","↶ Recently used"].includes(title))return;
     const filtered=[...new Set(types)].filter(type=>DEFINITIONS[type]&&matches(type));
     if(!filtered.length)return;
     parent.append(make("div","palette-heading",title));
@@ -161,7 +165,14 @@ function palette(){
     addPaletteGroup("↶ Recently used",studioFeatures.recent());
   }
   for(const group of groups)addPaletteGroup(group,Object.keys(DEFINITIONS).filter(type=>DEFINITIONS[type].group===group));
-  if(!total)parent.append(make("p","panel-note","No blocks found. Try another search."));
+  if(!total)parent.append(make("p","panel-note","No blocks found. Try another search or choose All blocks."));
+  $("paletteResults").textContent=total+" block options";
+}
+function setupCategories(){
+  const select=$("paletteCategory");
+  const groups=[...new Set(Object.values(DEFINITIONS).map(x=>x.group))];
+  for(const group of groups){const option=make("option","",group);option.value=group;select.append(option);}
+  select.addEventListener("change",palette);
 }
 function actionButton(symbol,title,callback){
   const btn=make("button","tiny-btn",symbol);btn.title=title;btn.type="button";
@@ -235,16 +246,33 @@ function dropZone(list,parentId,branch,index) {
 }
 function showAdd(parent=null,branch="root"){
   insertion={parent,branch};
-  const list=$("modalChoices");list.replaceChildren();
-  for(const type of Object.keys(DEFINITIONS)){
-    const btn=make("button","choice-button");btn.type="button";
-    btn.append(iconFor(type),make("span","",DEFINITIONS[type].name));
-    btn.addEventListener("click",()=>{
-      $("addDialog").close();
-      mutate(()=>addBlock(project,type,insertion.parent,insertion.branch));
+  const search=$("modalBlockSearch");search.value="";
+  const modalList=$("modalChoices");
+  const showChoices=()=>{
+    const query=search.value.trim().toLowerCase();
+    modalList.replaceChildren();
+    const language=project.language;
+    const types=Object.keys(DEFINITIONS).filter(type=>{
+      const def=DEFINITIONS[type];
+      if(query)return (def.name+" "+def.group+" "+type).toLowerCase().includes(query);
+      return language==="luau"?!def.group.startsWith("JavaScript"):!def.group.startsWith("Roblox");
     });
-    list.append(btn);
-  }
+    const fragment=document.createDocumentFragment();
+    for(const type of types){
+      const btn=make("button","choice-button");btn.type="button";
+      btn.append(iconFor(type),make("span","",DEFINITIONS[type].name));
+      btn.addEventListener("click",()=>{
+        $("addDialog").close();
+        studioFeatures?.trackRecent(type);
+        mutate(()=>addBlock(project,type,insertion.parent,insertion.branch));
+      });
+      fragment.append(btn);
+    }
+    modalList.append(fragment);
+    if(!types.length)modalList.append(make("p","panel-note","No matching blocks"));
+  };
+  search.oninput=showChoices;
+  showChoices();
   $("addDialog").showModal();
 }
 function blockView(block) {
@@ -258,7 +286,7 @@ function blockView(block) {
     event.dataTransfer.setData("text/plain",JSON.stringify({kind:"move",id:block.id}));
   });
   const header=make("div","block-heading");
-  const title=make("strong","",icons[block.type]+"  "+definition.name);
+  const title=make("strong","",(icons[block.type]||"◈")+"  "+definition.name);
   const buttons=make("div","block-actions");
   buttons.append(
     actionButton("▸","Collapse or expand block",()=>{
@@ -441,7 +469,7 @@ function bindActions(){
   $("paletteSearch").addEventListener("input",palette);
   $("projectTitle").addEventListener("focus",checkpoint);
   $("projectTitle").addEventListener("input",event=>{project.title=event.target.value.slice(0,80);persist();});
-  $("language").addEventListener("change",event=>{checkpoint();project.language=event.target.value;updateOutputs();persist();updateHistory();});
+  $("language").addEventListener("change",event=>{checkpoint();project.language=event.target.value;updateOutputs();persist();updateHistory();palette();});
   $("loadTemplateBtn").addEventListener("click",()=>{
     if(project.blocks.length&&!confirm("Load a template? Your current blocks will be replaced."))return;
     const language=project.language;
@@ -450,9 +478,13 @@ function bindActions(){
     });
     notify("Template loaded. Customize each block to get started.");
   });
-  $("copyCodeBtn").addEventListener("click",async()=>{
-    try{await navigator.clipboard.writeText(generate(project));notify("Generated code copied");}
-    catch(error){notify("Clipboard blocked — select code and copy manually");}
+  const showCopyFallback=createCopyFallback();
+  const copyCurrentCode=()=>copyCodeWithFallback(generate(project),notify,showCopyFallback);
+  $("copyCodeBtn").addEventListener("click",copyCurrentCode);
+  document.addEventListener("keydown",event=>{
+    if(!(event.ctrlKey||event.metaKey)||!event.shiftKey||event.key.toLowerCase()!=="c")return;
+    if(event.target instanceof HTMLInputElement||event.target instanceof HTMLTextAreaElement)return;
+    event.preventDefault();copyCurrentCode();
   });
   $("exportCodeBtn").addEventListener("click",()=>{
     const issues=lint(project).filter(item=>item.severity==="error");
@@ -488,5 +520,5 @@ function bindActions(){
 bindActions();
 studioFeatures=mountStudio({getProject:()=>project,notify,renderPalette:palette});
 workspaceUI=mountWorkspaceUI({getWorkspace:()=>workspace,switchFile,updateWorkspace,notify,commitNow});
-palette();render();selectTab("code");
+setupCategories();palette();render();selectTab("code");
 console.info("EasyScript.io visual editor v"+VERSION+" initialized");
