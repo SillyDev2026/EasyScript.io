@@ -118,3 +118,24 @@ test("diagnostics and source minimap are nonexecuting",()=>{
  const lines=projectSourceMinimap(p);
  assert.ok(lines.some(x=>x.text.includes('print(')));
 });
+
+test("DataStore UpdateAsync reuses hoisted store once and unique protected-call variables",()=>{
+ const p=projectTemplate("blank");
+ addBlock(p,"datastoreUpdate");
+ addBlock(p,"datastoreUpdate");
+ const code=generate(p);
+ assert.equal((code.match(/GetDataStore\("PlayerDataV1"\)/g)||[]).length,1);
+ assert.match(code,/local playerDataStore = DataStoreService:GetDataStore/);
+ assert.match(code,/playerDataStore:UpdateAsync/);
+ assert.match(code,/local updateOk, updateResult = pcall/);
+ assert.match(code,/local updateOk2, updateResult2 = pcall/);
+});
+test("multiple pathfinding blocks use independent readable variables",()=>{
+ const p=projectTemplate("blank");
+ addBlock(p,"pathWaypoints");addBlock(p,"pathWaypoints");
+ const code=generate(p);
+ assert.match(code,/local path = game:GetService/);
+ assert.match(code,/local path2 = game:GetService/);
+ assert.match(code,/local pathOk2 = pcall/);
+ assert.doesNotMatch(code,/__index_|_mvkvbfda/);
+});
