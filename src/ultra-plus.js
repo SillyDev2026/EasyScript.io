@@ -118,7 +118,7 @@ export function mountUltraPlus({getProject,getWorkspace,notify,scrollToBlock}){
         info.textContent=diff.changed?diff.removed.length+" removed · "+diff.added.length+" added lines":"No generated code changes.";
         if(diff.truncated)info.textContent+=" Diff truncated at 2,000 lines.";
         for(const line of [...diff.removed,...diff.added]){
-          const element=el("div","ultra-plus-diff-line",line.kind==="removed"?"- "+line.text:"+ "+line.text);
+          const element=el("div","ultra-plus-diff-line",line.kind==="removed"?"- "+line.text:" + "+line.text);
           element.dataset.kind=line.kind;report.append(element);
         }
       }catch(error){info.textContent="Comparison failed: "+error.message;}
