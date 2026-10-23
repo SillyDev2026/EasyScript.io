@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b1020" />
-  <meta name="description" content="EasyScript helps you build real code by combining visual, beginner-friendly scripting blocks." />
+  <meta name="description" content="Build Luau and JavaScript visually. EasyScript includes Roblox scripting blocks, live code, diagnostics, local projects, and free templates." />
   <title>EasyScript — Build scripts visually</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -14,10 +14,11 @@
       <div class="header-brand">
         <div class="logo" aria-hidden="true"><span>&lt;</span><span class="logo-spark">◆</span><span>/&gt;</span></div>
         <div class="brand-words"><strong>EasyScript<span class="brand-dot">.io</span></strong><span>Visual scripting studio</span></div>
-        <span class="version">ALPHA 0.2</span>
+        <span class="version">BETA 0.3</span>
       </div>
       <div class="header-actions">
         <span id="saveStatus" class="saved" aria-live="polite"><span class="status-light"></span> Saved locally</span>
+        <button id="libraryBtn" class="btn ghost" title="Open project library (Ctrl+Shift+L)">▤ <span>My projects</span></button>
         <button id="importBtn" class="btn ghost">↥ <span>Import</span></button>
         <button id="exportProjectBtn" class="btn ghost">⇩ <span>Project</span></button>
         <button id="exportCodeBtn" class="btn primary">↧ <span>Export code</span></button>
@@ -34,7 +35,7 @@
         <label class="inline-label" for="language">Language</label>
         <select id="language" aria-label="Code language"><option value="luau">Luau · Roblox</option><option value="javascript">JavaScript</option></select>
         <label class="inline-label" for="template">Template</label>
-        <select id="template" aria-label="Project template"><option value="starter">Purchase check</option><option value="counter">Coin counter</option><option value="functions">Function demo</option><option value="blank">Blank project</option></select>
+        <select id="template" aria-label="Project template"><option value="starter">Purchase check</option><option value="counter">Coin counter</option><option value="functions">Function demo</option><option value="leaderstats">Roblox · Leaderstats</option><option value="touch">Roblox · Touch detector</option><option value="remote">Roblox · Remote safety</option><option value="blank">Blank project</option></select>
         <button id="loadTemplateBtn" class="btn compact">Load</button>
       </div>
     </section>
@@ -42,7 +43,7 @@
     <main class="layout">
       <aside class="panel palette-panel" aria-label="Block library">
         <div class="panel-top"><div><div class="eyebrow">01 / LIBRARY</div><h2>Building blocks</h2></div><span class="panel-mini-icon">▦</span></div>
-        <p class="panel-note">Tap a block to add it, or drag it into the workspace.</p>
+        <p class="panel-note">Choose a block, then customize its fields. Drag between insertion points or use the nested Add buttons.</p>
         <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="paletteSearch" type="search" placeholder="Find a block..." aria-label="Search blocks" /></div>
         <div id="palette" class="palette-groups"></div>
         <div class="palette-footer"><div class="help-icon">?</div><div><b>New to scripting?</b><span>Build with blocks. Learn from real code.</span></div></div>
@@ -57,7 +58,8 @@
             <button class="icon-btn danger-text" id="clearBtn" title="Clear workspace" aria-label="Clear workspace">⌫</button>
           </div>
         </div>
-        <div class="workspace-intro"><span class="indicator">●</span> Your script runs from top to bottom. Add nested steps inside loops, conditions and functions.</div>
+        <div class="workspace-intro"><span class="indicator">●</span> Your script runs from top to bottom. Nest blocks inside loops, conditions, functions, and Roblox events.</div>
+        <div class="editor-guide"><span>① Pick a block</span><span>② Edit its fields</span><span>③ Preview the code</span></div>
         <div id="workspace" class="workspace"></div>
         <div class="workspace-bottom"><button id="addBlockBtn" class="btn add-main">＋ Add a block</button><span>Tip: use ↑ ↓ to move blocks on mobile</span></div>
       </section>
@@ -68,15 +70,21 @@
         <div id="codePane" class="result-content" role="tabpanel"><div class="code-toolbar"><span id="codeFilename">script.luau</span><button id="copyCodeBtn" class="mini-btn">⧉ Copy</button></div><pre class="code-scroller"><code id="codeOutput"></code></pre></div>
         <div id="diagnosticsPane" class="result-content hidden" role="tabpanel" aria-live="polite"></div>
         <div id="consolePane" class="result-content hidden" role="tabpanel"><div id="consoleOutput" class="console-lines"><span class="dim">Select “Simulate” to preview simple block logic without executing your script.</span></div></div>
-        <div class="result-bottom"><button id="simulateBtn" class="btn run-btn">▶ Simulate</button><p>Safe logic preview · No Roblox engine or external code execution</p></div>
+        <div class="result-bottom"><button id="simulateBtn" class="btn run-btn">▶ Simulate</button><p>Simulation runs simple logic only. Roblox events and objects require Roblox Studio.</p></div>
       </aside>
     </main>
-    <footer class="footer"><span><span class="status-light"></span> EasyScript visual engine ready</span><span>Open-source visual editor · No account needed</span><span id="footerStats">0 blocks · Luau</span></footer>
+    <footer class="footer"><span><span class="status-light"></span> EasyScript visual engine ready</span><span>Luau + JavaScript · Browser-only · No account needed</span><span id="footerStats">0 blocks · Luau</span></footer>
   </div>
 
   <input type="file" id="filePicker" accept=".json,application/json" hidden />
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <dialog id="addDialog" class="add-dialog"><form method="dialog"><div class="modal-header"><div><div class="eyebrow">ADD BLOCK</div><h2>Choose a step</h2></div><button class="icon-btn" value="cancel" aria-label="Close">✕</button></div><p>Tap a block to insert it at the selected location.</p><div id="modalChoices" class="modal-choices"></div></form></dialog>
+  <dialog id="libraryDialog" class="library-dialog">
+    <div class="modal-header"><div><div class="eyebrow">LOCAL PROJECTS</div><h2>My project snapshots <span id="libraryCount" class="count-pill">0 saved</span></h2></div><form method="dialog"><button class="icon-btn" aria-label="Close project library">✕</button></form></div>
+    <p class="dialog-hint">Keep multiple versions on this device. Snapshots are not cloud backups, so export your projects for safekeeping.</p>
+    <div id="libraryList" class="library-list"></div>
+    <div class="library-footer"><button id="saveSnapshotBtn" class="btn primary" type="button">＋ Save current project</button><form method="dialog"><button class="btn ghost">Close</button></form></div>
+  </dialog>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
