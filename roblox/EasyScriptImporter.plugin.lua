@@ -82,7 +82,7 @@ local pending = nil
 local function validName(name)
     return type(name) == "string" and #name > 0 and #name <= 72 and
         name:match("^[%w_%-%.]+$") ~= nil and
-        not name:find("%.%.", 1, true)
+        not name:find("..", 1, true)
 end
 local function check(jsonText)
     if #jsonText > 6000000 then error("Manifest is too large") end
