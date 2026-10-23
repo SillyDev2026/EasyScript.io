@@ -27,13 +27,13 @@ function statement(text,language){
   if((m=/^\/\/\s?(.*)$/.exec(text)))return ["comment",{text:m[1]}];
  }else{
   if((m=/^print\((.*)\)$/.exec(text)))return ["print",{value:m[1]}];
+  if((m=/^local (\w+) = game:GetService\("([A-Za-z]+)"\)$/.exec(text)))
+   return ["service",{alias:m[1],service:m[2]}];
   if((m=RX.luauLocal.exec(text)))return ["variable",{name:m[1],type:m[2]||"",value:m[3]}];
   if((m=RX.luauInc.exec(text)))return ["increment",{name:m[1],amount:m[2]}];
   if((m=RX.luauSet.exec(text)))return ["set",{name:m[1],value:m[2]}];
   if((m=/^task\.wait\((.+)\)$/.exec(text)))return ["wait",{seconds:m[1]}];
   if((m=/^return (.+)$/.exec(text)))return ["returnValue",{value:m[1]}];
-  if((m=/^local (\w+) = game:GetService\("([A-Za-z]+)"\)$/.exec(text)))
-   return ["service",{alias:m[1],service:m[2]}];
   if((m=/^--\s?(.*)$/.exec(text)))return ["comment",{text:m[1]}];
  }
  return null;
