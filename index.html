@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b1020" />
-  <meta name="description" content="Build Luau and JavaScript visually with 36 blocks, file tabs, Roblox templates, live code and local workspace backups." />
+  <meta name="description" content="Build Luau and JavaScript visually with 128 blocks, Roblox-focused Luau, JavaScript tools, cleaner exports and multi-file workspace backups." />
   <title>EasyScript — Build scripts visually</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -14,7 +14,7 @@
       <div class="header-brand">
         <div class="logo" aria-hidden="true"><span>&lt;</span><span class="logo-spark">◆</span><span>/&gt;</span></div>
         <div class="brand-words"><strong>EasyScript<span class="brand-dot">.io</span></strong><span>Visual scripting studio · Multi-file Studio</span></div>
-        <span class="version">BETA 0.5</span>
+        <span class="version">BETA 0.6</span>
       </div>
       <div class="header-actions">
         <span id="saveStatus" class="saved" aria-live="polite"><span class="status-light"></span> Saved locally</span>
@@ -45,6 +45,9 @@
         <div class="panel-top"><div><div class="eyebrow">01 / LIBRARY</div><h2>Building blocks</h2></div><span class="panel-mini-icon">▦</span></div>
         <p class="panel-note">Choose a block, then customize its fields. Drag between insertion points or use the nested Add buttons.</p>
         <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="paletteSearch" type="search" placeholder="Find a block..." aria-label="Search blocks" /></div>
+        <label class="palette-filter-label" for="paletteCategory">Category</label>
+        <select id="paletteCategory" class="palette-category" aria-label="Block category"><option value="relevant">Relevant to language</option><option value="all">All blocks</option></select>
+        <div id="paletteResults" class="palette-results" aria-live="polite"></div>
         <div id="palette" class="palette-groups"></div>
         <div class="palette-footer"><div class="help-icon">?</div><div><b>New to scripting?</b><span>Build with blocks. Learn from real code.</span></div></div>
       </aside>
@@ -78,7 +81,7 @@
 
   <input type="file" id="filePicker" accept=".json,application/json" hidden />
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <dialog id="addDialog" class="add-dialog"><form method="dialog"><div class="modal-header"><div><div class="eyebrow">ADD BLOCK</div><h2>Choose a step</h2></div><button class="icon-btn" value="cancel" aria-label="Close">✕</button></div><p>Tap a block to insert it at the selected location.</p><div id="modalChoices" class="modal-choices"></div></form></dialog>
+  <dialog id="addDialog" class="add-dialog"><form method="dialog"><div class="modal-header"><div><div class="eyebrow">ADD BLOCK</div><h2>Choose a step</h2></div><button class="icon-btn" value="cancel" aria-label="Close">✕</button></div><p>Tap a block to insert it at the selected location.</p><input id="modalBlockSearch" class="modal-search" type="search" placeholder="Search blocks by name or category…" aria-label="Search available blocks" autocomplete="off" /><div id="modalChoices" class="modal-choices"></div></form></dialog>
   <dialog id="libraryDialog" class="library-dialog">
     <div class="modal-header"><div><div class="eyebrow">LOCAL PROJECTS</div><h2>My project snapshots <span id="libraryCount" class="count-pill">0 saved</span></h2></div><form method="dialog"><button class="icon-btn" aria-label="Close project library">✕</button></form></div>
     <p class="dialog-hint">Keep multiple versions on this device. Snapshots are not cloud backups, so export your projects for safekeeping.</p>
