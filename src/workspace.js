@@ -108,7 +108,7 @@ export function chooseFile(workspace,id){
 export function bundleSources(workspace){
   const seen=new Set();
   return workspace.files.map(file=>{
-    let name=validName(file.name,file.project.language),number=2;
+    let name=validName(String(file.name).replace(/\.(luau|lua|js)$/i,""),file.project.language),number=2;
     while(seen.has(name.toLowerCase())){
       const i=name.lastIndexOf(".");
       name=name.slice(0,i)+"-"+number+++name.slice(i);
