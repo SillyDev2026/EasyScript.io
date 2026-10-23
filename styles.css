@@ -268,3 +268,18 @@ html[data-theme="light"] .ultra-description,html[data-theme="light"] .ultra-head
 html[data-theme="light"] .audit-stat,html[data-theme="light"] .audit-finding,html[data-theme="light"] .structure-node,html[data-theme="light"] .jump-results{background:#f2f6ff;color:#1c3656;border-color:#c9d7ec}
 html[data-theme="light"] .audit-stat strong,html[data-theme="light"] .audit-stat span{color:#243959}
 html[data-theme="light"] .library-dialog,html[data-theme="light"] .add-dialog,html[data-theme="light"] .shortcuts-dialog{background:#fff;color:#1c3452;border-color:#c9d9ec}
+
+/* Mobile focus and visibility are coordinated through the selected workspace tab. */
+@media(max-width:760px){
+  body[data-focus="true"] .layout>.panel{display:none}
+  body[data-focus="true"] .layout>.editor-panel{display:flex}
+  .code-scroller{overflow:auto}
+  .ultra-header{align-items:flex-start}
+  .wizard-output{font-size:11px}
+}
+html[data-theme="light"] .mobile-nav button{background:#e9f0fc;color:#355178;border-color:#c3d6ee}
+html[data-theme="light"] .mobile-nav button.active{background:#315cb8;color:#fff}
+html[data-theme="light"] .favorite-toggle.is-favorite{background:#fff0c4;color:#855516}
+html[data-theme="light"] .studio-toolbar .btn.active,html[data-theme="light"] .ultra-actions .btn.active{background:#315cb8;color:#fff}
+html[data-theme="light"] .footer,html[data-theme="light"] .panel-note,html[data-theme="light"] .workspace-bottom{color:#516984}
+html[data-theme="light"] .structure-node:hover,html[data-theme="light"] .jump-result:hover{background:#dbe9ff}
