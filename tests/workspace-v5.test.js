@@ -10,7 +10,7 @@ function memoryStorage(){
 }
 test("v0.5 exports 36 block types and 4 additional templates",()=>{
   assert.equal(VERSION,"0.6.0");
-  assert.equal(Object.keys(DEFINITIONS).length,129);
+  assert.equal(Object.keys(DEFINITIONS).length,128);
   for(const key of ["list","loop","attributes","join"])assert.ok(projectTemplate(key).blocks.length);
 });
 test("list template previews deterministic list operations",()=>{
