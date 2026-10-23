@@ -2,6 +2,7 @@ import {analyzeWorkspace} from "./project-graph.js";
 import {createZip,workspaceZipEntries} from "./zip.js";
 import {bundleSources,validateWorkspace} from "./workspace.js";
 import {generate} from "./engine.js";
+import {listCustomDefinitions} from "./custom-blocks.js";
 import {addRecovery,listRecovery,restoreRecovery} from "./recovery.js";
 
 const el=(tag,cls="",value)=>{
@@ -30,7 +31,7 @@ export function mountWorkspaceV1({getWorkspace,updateWorkspace,switchFile,notify
     try{
       commitNow();
       const ws=getWorkspace();
-      const data=createZip(workspaceZipEntries(ws,bundleSources,generate));
+      const data=createZip(workspaceZipEntries(ws,bundleSources,generate,listCustomDefinitions()));
       downloadZip((ws.name||"EasyScript").replace(/[^a-z0-9_-]/gi,"-").slice(0,50)+".zip",data);
       notify(ws.files.length+" script files and editable backup exported as ZIP");
     }catch(e){notify("ZIP export failed: "+e.message);}
