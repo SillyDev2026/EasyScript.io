@@ -1,9 +1,9 @@
 // Educational starter packs built with real block definitions. No code strings or eval.
 export const PACKS=[
-  {id:"globalCounter",title:"Luau · Simple globals",language:"luau"},
+  {id:"globalCounter",title:"Luau · Script-local counter",language:"luau"},
   {id:"uiButton",title:"Roblox · UI button",language:"luau"},
   {id:"doorPrompt",title:"Roblox · Door prompt",language:"luau"},
-  {id:"playerData",title:"Roblox · Player DataStore read",language:"luau"},
+  {id:"playerData",title:"Roblox · Leaderstats + DataStore",language:"luau"},
   {id:"remoteReply",title:"Roblox · Client response",language:"luau"},
   {id:"vectors",title:"Roblox · Vectors & colors",language:"luau"},
   {id:"jsPage",title:"JavaScript · DOM text",language:"javascript"},
@@ -34,9 +34,8 @@ export function packTemplate(type,make){
   }else if(type==="playerData"){
     const player=b("playerJoined");
     player.body.push(
-      b("datastoreGet",{name:"SavedCoins"}),
-      b("leaderstat",{initial:"SavedCoins or 0"}),
-      b("comment",{text:"Add retry and SetAsync/UpdateAsync saving for production; this example only loads."})
+      b("datastoreGet",{name:"savedCoins"}),
+      b("leaderstat",{initial:"savedCoins or 0"})
     );
     p.blocks=[player];
   }else if(type==="remoteReply"){
