@@ -139,9 +139,10 @@ export function generate(project) {
   const preambleUsed=new Set(["Players","DataStoreService"]);
   // Generated service aliases must not shadow names declared by user blocks.
   traverse(project.blocks,b=>{
-    if(["variable","array","function","requireModule","globalRead"].includes(b.type)&&b.fields?.name)
+    if(["variable","array","function","requireModule","globalRead","datastoreGet"].includes(b.type)&&b.fields?.name)
       preambleUsed.add(String(b.fields.name));
     if(b.type.startsWith("global")&&b.fields?.key)preambleUsed.add(String(b.fields.key));
+    if(b.type==="service"&&b.fields?.alias)preambleUsed.add(String(b.fields.alias));
   });
   const uniqueGlobal=(base,used)=>{
     let name=base,n=2;while(used.has(name))name=base+(n++);
@@ -184,9 +185,13 @@ export function generate(project) {
 
   if(js)lines.push("async function main() {");
   function emit(blocks,level,scope={loop:false,func:false,used:new Set(),leaderstatsName:null}) {
+    for(const alias of stores.values())scope.used.add(alias);
+    if(needsPlayers)scope.used.add("Players");
+    if(stores.size)scope.used.add("DataStoreService");
     for(const b of blocks){
-      if(["variable","array","function","service","datastoreGet","globalRead"].includes(b.type)
+      if(["variable","array","function","datastoreGet","globalRead","requireModule"].includes(b.type)
         &&typeof b.fields?.name==="string")scope.used.add(b.fields.name);
+      if(b.type==="service"&&typeof b.fields?.alias==="string")scope.used.add(b.fields.alias);
     }
     const reserve=base=>{
       let key=base,n=2;
