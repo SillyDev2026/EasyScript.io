@@ -132,19 +132,29 @@ export function generate(project) {
   const quote=value=>JSON.stringify(String(value));
 
   if(js)lines.push("async function main() {");
-  function emit(blocks,level) {
+  function emit(blocks,level,scope={loop:false,func:false}) {
     if(!blocks.length){lines.push(space(level)+(js?"// Add blocks here":"-- Add blocks here"));return;}
-    for(const b of blocks) {
-      const f=b.fields,s=space(level);
+    for(let index=0;index<blocks.length;index++) {
+      const b=blocks[index],f=b.fields,s=space(level);
+      if(["breakLoop","returnValue"].includes(b.type)){
+        const allowed=b.type==="breakLoop"?scope.loop:scope.func;
+        if(!allowed||index!==blocks.length-1){
+          lines.push(s+(js?"// ":"-- ")+b.type+" must be last within a "+(b.type==="breakLoop"?"loop":"function")+" body.");
+          continue;
+        }
+      }
+      const isLoop=["repeat","while","each","forRange"].includes(b.type);
+      const isBranch=b.type==="if";
+      const childScope=isBranch?scope:isLoop?{loop:true,func:scope.func}:{loop:false,func:true};
+      const emitChild=(nodes,indent)=>{
+        const start=lines.length;emit(nodes,indent,childScope);return lines.splice(start);
+      };
       if(js&&luaOnly.has(b.type)){lines.push(s+"// Roblox-only: "+DEFINITIONS[b.type].name+" (switch to Luau)");continue;}
-      const extra=extensionCode(b,js,level,(nodes,indent)=>{
-        const start=lines.length;emit(nodes,indent);return lines.splice(start);
-      });
+      const extra=extensionCode(b,js,level,emitChild);
       if(extra){lines.push(...extra);continue;}
-      const callback=(nodes,indent)=>{const start=lines.length;emit(nodes,indent);return lines.splice(start);};
-      const roblox=robloxCode(b,project.language,level,callback);
+      const roblox=robloxCode(b,project.language,level,emitChild);
       if(roblox){lines.push(...roblox);continue;}
-      const javascript=javascriptCode(b,project.language,level,callback);
+      const javascript=javascriptCode(b,project.language,level,emitChild);
       if(javascript){lines.push(...javascript);continue;}
       switch(b.type) {
         case "print":lines.push(s+(js?"console.log("+expression(f.value,"undefined")+");":"print("+expression(f.value)+")"));break;
@@ -154,14 +164,14 @@ export function generate(project) {
         case "service":lines.push(s+"local "+f.alias+" = game:GetService("+quote(f.service)+")");break;
         case "playerJoined":
           lines.push(s+'game:GetService("Players").PlayerAdded:Connect(function(player)');
-          emit(b.body,level+1);lines.push(s+"end)");break;
+          emit(b.body,level+1,childScope);lines.push(s+"end)");break;
         case "partTouched":
           lines.push(s+expression(f.path,"workspace.Door")+".Touched:Connect(function(hit)");
-          emit(b.body,level+1);lines.push(s+"end)");break;
+          emit(b.body,level+1,childScope);lines.push(s+"end)");break;
         case "remoteReceived":
           lines.push(s+expression(f.path,"game.ReplicatedStorage.MyEvent")+".OnServerEvent:Connect(function(player, data)");
           lines.push(space(level+1)+"-- SECURITY: validate player permissions and all client data");
-          emit(b.body,level+1);lines.push(s+"end)");break;
+          emit(b.body,level+1,childScope);lines.push(s+"end)");break;
         case "leaderstat": {
           const suffix=b.id.replace(/\W/g,"").slice(-12);
           const stats="leaderstats_"+suffix,stat="stat_"+suffix;
@@ -188,19 +198,19 @@ export function generate(project) {
         case "wait":lines.push(s+(js?"await new Promise(resolve => setTimeout(resolve, Math.max(0, ("+expression(f.seconds,"0")+")) * 1000));":"task.wait("+expression(f.seconds,"0")+")"));break;
         case "comment":lines.push(s+(js?"// ":"-- ")+String(f.text).replace(/[\r\n]/g," "));break;
         case "call":lines.push(s+(js?"await ":"")+f.name+"();");if(!js)lines[lines.length-1]=s+f.name+"()";break;
-        case "function":lines.push(s+(js?"async function ":"local function ")+f.name+"()"+(js?" {":""));emit(b.body,level+1);lines.push(s+(js?"}":"end"));break;
+        case "function":lines.push(s+(js?"async function ":"local function ")+f.name+"()"+(js?" {":""));emit(b.body,level+1,childScope);lines.push(s+(js?"}":"end"));break;
         case "repeat":{
           const varName="__index_"+b.id.replace(/\W/g,"");
           lines.push(s+(js?"for (let "+varName+" = 0; "+varName+" < ("+expression(f.count,"0")+"); "+varName+"++) {":"for "+varName+" = 1, "+expression(f.count,"0")+" do"));
-          emit(b.body,level+1);lines.push(s+(js?"}":"end"));break;
+          emit(b.body,level+1,childScope);lines.push(s+(js?"}":"end"));break;
         }
         case "while":
           lines.push(s+(js?"while ("+condition(b,true)+") {":"while "+condition(b,false)+" do"));
-          emit(b.body,level+1);lines.push(s+(js?"}":"end"));break;
+          emit(b.body,level+1,childScope);lines.push(s+(js?"}":"end"));break;
         case "if":
           lines.push(s+(js?"if ("+condition(b,true)+") {":"if "+condition(b,false)+" then"));
-          emit(b.then,level+1);
-          if(b.else.length){lines.push(s+(js?"} else {":"else"));emit(b.else,level+1);}
+          emit(b.then,level+1,childScope);
+          if(b.else.length){lines.push(s+(js?"} else {":"else"));emit(b.else,level+1,childScope);}
           lines.push(s+(js?"}":"end"));break;
         default:
           lines.push(s+(js?"// ":"-- ")+"Unsupported block: "+b.type);break;
