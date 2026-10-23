@@ -58,12 +58,13 @@ export function createZip(entries){
   for(const p of [...payload,...central,end]){result.set(p,pos);pos+=p.length;}
   return result;
 }
-export function workspaceZipEntries(workspace,bundleSources,generate){
+export function workspaceZipEntries(workspace,bundleSources,generate,customBlocks=[]){
   const scripts=bundleSources(workspace);
   const manifest={format:"EasyScript v1.0 portable bundle",name:workspace.name,
     files:scripts.map(file=>({name:file.filename,kind:file.kind,language:file.language}))};
   return [
-    {name:"project.easyscript-workspace.json",data:JSON.stringify(workspace,null,2)},
+    {name:"project.easyscript-workspace.json",data:JSON.stringify({...workspace,customBlocks},null,2)},
+    ...(customBlocks.length?[{name:"custom-blocks.json",data:JSON.stringify(customBlocks,null,2)}]:[]),
     {name:"manifest.json",data:JSON.stringify(manifest,null,2)},
     {name:"README.txt",data:"EasyScript.io v1.0 export.\nScripts are source files, not a Roblox place file.\nImport script contents into the correct Script / LocalScript / ModuleScript location in Roblox Studio.\n"},
     ...scripts.map(file=>({name:"scripts/"+file.filename,data:generate(file.project)}))
