@@ -10,6 +10,7 @@ import {copyCodeWithFallback,createCopyFallback} from "./code-copy.js";
 import {mountExpressionComposer} from "./expression-ui.js";
 import {addRecovery} from "./recovery.js";
 import {mountEditorPro} from "./editor-pro.js";
+import {mountUltraExpansion} from "./ultra-expansion.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
@@ -35,6 +36,7 @@ let studioFeatures = null;
 let ultraPlus = null;
 let expressionComposer = null;
 let editorPro = null;
+let ultraExpansion = null;
 let outputFrame = 0;
 function queueOutputs(){
   if(outputFrame)return;
@@ -396,6 +398,7 @@ function updateOutputs(){
   if(!problems.length)pane.append(make("p","success","✓ No basic issues found. Test exported code in its target runtime."));
   studioFeatures?.update();
   ultraPlus?.update();
+  ultraExpansion?.update();
   editorPro?.update();
   for(const issue of problems){
     const element=make("button","problem "+issue.severity,issue.severity.toUpperCase()+": "+issue.message);
@@ -563,6 +566,7 @@ ultraPlus=mountUltraPlus({getProject:()=>project,getWorkspace:()=>workspace,noti
     if(element)setTimeout(()=>element.classList.remove("focused-problem"),1300);
   }
 });
+ultraExpansion=mountUltraExpansion({getProject:()=>project,notify});
 workspaceUI=mountWorkspaceUI({getWorkspace:()=>workspace,switchFile,updateWorkspace,notify,commitNow});
 setupCategories();palette();render();selectTab("code");
 console.info("EasyScript.io visual editor v"+VERSION+" initialized");
