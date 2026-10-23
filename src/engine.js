@@ -132,7 +132,7 @@ export function generate(project) {
   const safeSymbol=(v,fallback="value")=>{
     let clean=String(v||"").replace(/[^A-Za-z0-9_]/g,"").replace(/^[^A-Za-z_]+/,"");
     if(!clean)clean=fallback;
-    return clean.charAt(0).toLowerCase()+clean.slice(1);
+    return /^[A-Z0-9_]+$/.test(clean)?clean.toLowerCase():clean.charAt(0).toLowerCase()+clean.slice(1);
   };
   const preambleUsed=new Set(["Players","DataStoreService"]);
   const uniqueGlobal=(base,used)=>{
@@ -153,9 +153,12 @@ export function generate(project) {
       if(!scriptLocals.has(name))scriptLocals.set(name,null);
     }
   });
+  const firstGlobalUse=new Set();
   for(const b of project.blocks){
     const key=String(b.fields?.key||"");
-    if(b.type==="globalWrite"&&scriptLocals.has(key)&&scriptLocals.get(key)===null){
+    if(!scriptLocals.has(key)||firstGlobalUse.has(key))continue;
+    firstGlobalUse.add(key);
+    if(b.type==="globalWrite"){
       scriptLocals.set(key,expression(b.fields.value,"nil"));
       initialGlobalWrites.add(b.id);
     }
@@ -173,6 +176,10 @@ export function generate(project) {
 
   if(js)lines.push("async function main() {");
   function emit(blocks,level,scope={loop:false,func:false,used:new Set(),leaderstatsName:null}) {
+    for(const b of blocks){
+      if(["variable","array","function","service","datastoreGet","globalRead"].includes(b.type)
+        &&typeof b.fields?.name==="string")scope.used.add(b.fields.name);
+    }
     const reserve=base=>{
       let key=base,n=2;
       while(scope.used.has(key)){key=base+(n++);}
