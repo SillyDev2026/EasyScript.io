@@ -530,3 +530,35 @@ html[data-theme="light"] .pro-mini-line code{color:#234363}
  .pro-scroll-list{max-height:57dvh}
 }
 @media(max-width:370px){.pro-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* v1.2 Ultra Labs — adaptive builder cards */
+.ultra-expansion{border:1px solid #314e73;border-radius:16px;background:linear-gradient(135deg,#102340,#142037);padding:clamp(13px,1.5vw,22px);margin-top:clamp(12px,1.5vw,24px)}
+.ultra-expansion-heading{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:7px}
+.ultra-expansion-heading strong{font-size:clamp(17px,1.4vw,23px);color:#e4f1ff}
+.ultra-expansion-heading span,.ultra-lab-note{font-size:12px;color:#9cb6d9;line-height:1.55}
+.ultra-expansion-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:16px}
+.ultra-expansion-buttons .btn{min-width:0;min-height:42px;white-space:normal;font-size:12px;padding:9px 6px}
+.ultra-expansion-buttons .btn.active{background:#325ab4;color:#fff;border-color:#7fa9f4}
+.ultra-expansion-content{border-top:1px solid #344c72;margin-top:14px;padding-top:14px}
+.ultra-lab-controls{display:flex;align-items:end;flex-wrap:wrap;gap:10px;margin-bottom:13px}
+.ultra-lab-field{display:flex;flex-direction:column;gap:6px;min-width:min(155px,100%);flex:1;color:#a6bfdf;font-size:12px}
+.ultra-lab-input{padding:12px 10px;color:#e1edff;background:#0c1c33;border:1px solid #456089;border-radius:9px;width:100%;max-width:none}
+.ultra-lab-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:10px 0}
+.ultra-lab-preview{font:12px/1.6 ui-monospace,Consolas,monospace;background:#08182d;color:#d4e9ff;border:1px solid #375277;border-radius:10px;padding:16px;max-height:480px;overflow:auto;white-space:pre;tab-size:4}
+.ultra-lab-report{background:#10253e;border:1px solid #3b5273;border-radius:10px;padding:12px;color:#d8e8ff}
+.ultra-lab-report p{font-size:12px;line-height:1.5;margin:6px 0}
+html[data-theme="light"] .ultra-expansion{background:#fff;border-color:#cbd9e9}
+html[data-theme="light"] .ultra-expansion-heading strong{color:#243858}
+html[data-theme="light"] .ultra-expansion-heading span,html[data-theme="light"] .ultra-lab-note,html[data-theme="light"] .ultra-lab-field{color:#536a89}
+html[data-theme="light"] .ultra-lab-input{background:#f6f9fe;color:#213a57;border-color:#c4d4e8}
+html[data-theme="light"] .ultra-lab-preview,html[data-theme="light"] .ultra-lab-report{background:#edf4ff;color:#213b60;border-color:#cddced}
+@media(max-width:950px){.ultra-expansion-buttons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){
+ .ultra-expansion-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ultra-expansion-buttons .btn:last-child{grid-column:1/-1}
+ .ultra-expansion-buttons .btn{font-size:11px}
+ .ultra-lab-controls{flex-direction:column;align-items:stretch}
+ .ultra-lab-field{width:100%}
+ .ultra-lab-actions .btn{flex:1;min-width:110px}
+ .ultra-lab-preview{font-size:11px;max-height:65dvh}
+}
