@@ -8,14 +8,14 @@ import {EXPANDED_LUAU_DEFINITIONS,expandedLuauCode,expandedLuauDiagnostics} from
 export const VERSION = "1.2.0";
 export const DEFINITIONS = {
   print: { name:"Print", group:"Output", color:"blue", fields:{value:'"Hello world!"'} },
-  variable: { name:"Create variable", group:"Variables", color:"purple", fields:{name:"Coins",value:"100"} },
+  variable: { name:"Create variable", group:"Variables", color:"purple", fields:{name:"Coins",value:"100",type:""} },
   set: { name:"Set variable", group:"Variables", color:"purple", fields:{name:"Coins",value:"Coins + 1"} },
   if: { name:"If / otherwise", group:"Logic", color:"amber", fields:{left:"Coins",operator:">=",right:"100"}, branches:["then","else"] },
   repeat: { name:"Repeat", group:"Logic", color:"amber", fields:{count:"3"}, branches:["body"] },
   wait: { name:"Wait", group:"Flow", color:"teal", fields:{seconds:"1"} },
   comment: { name:"Comment", group:"Flow", color:"slate", fields:{text:"Explain this step"} },
-  function: { name:"Define function", group:"Functions", color:"pink", fields:{name:"greet"}, branches:["body"] },
-  call: { name:"Call function", group:"Functions", color:"pink", fields:{name:"greet"} },
+  function: { name:"Define function", group:"Functions", color:"pink", fields:{name:"greet",params:"",returnType:""}, branches:["body"] },
+  call: { name:"Call function", group:"Functions", color:"pink", fields:{name:"greet",args:""} },
   increment: { name:"Change number", group:"Variables", color:"purple", fields:{name:"Coins",amount:"1"} },
   while: { name:"While condition", group:"Logic", color:"amber", fields:{left:"Coins",operator:"<",right:"10"}, branches:["body"] },
   service: { name:"Get Roblox service", group:"Roblox · Services", color:"teal", fields:{alias:"Players",service:"Players"} },
@@ -235,7 +235,7 @@ export function generate(project) {
       if(expanded){lines.push(...expanded);continue;}
       switch(b.type) {
         case "print":lines.push(s+(js?"console.log("+expression(f.value,"undefined")+");":"print("+expression(f.value)+")"));break;
-        case "variable":lines.push(s+(js?"let ":"local ")+f.name+" = "+expression(f.value,js?"undefined":"nil")+(js?";":""));break;
+        case "variable":lines.push(s+(js?"let ":"local ")+f.name+(!js&&f.type?.trim()?": "+f.type.trim():"")+" = "+expression(f.value,js?"undefined":"nil")+(js?";":""));break;
         case "set":lines.push(s+f.name+" = "+expression(f.value,js?"undefined":"nil")+(js?";":""));break;
         case "increment":lines.push(s+f.name+" += "+expression(f.amount,"1")+(js?";":""));break;
         case "service":
@@ -279,8 +279,8 @@ export function generate(project) {
         }
         case "wait":lines.push(s+(js?"await new Promise(resolve => setTimeout(resolve, Math.max(0, ("+expression(f.seconds,"0")+")) * 1000));":"task.wait("+expression(f.seconds,"0")+")"));break;
         case "comment":lines.push(s+(js?"// ":"-- ")+String(f.text).replace(/[\r\n]/g," "));break;
-        case "call":lines.push(s+(js?"await ":"")+f.name+"();");if(!js)lines[lines.length-1]=s+f.name+"()";break;
-        case "function":lines.push(s+(js?"async function ":"local function ")+f.name+"()"+(js?" {":""));emit(b.body,level+1,childScope);lines.push(s+(js?"}":"end"));break;
+        case "call":lines.push(s+(js?"await ":"")+f.name+"("+expression(f.args,"")+")"+(js?";":""));break;
+        case "function":lines.push(s+(js?"async function ":"local function ")+f.name+"("+expression(f.params,"")+")"+(!js&&f.returnType?.trim()?": "+f.returnType.trim():"")+(js?" {":""));emit(b.body,level+1,childScope);lines.push(s+(js?"}":"end"));break;
         case "repeat":{
           const varName=reserve("index");
           lines.push(s+(js?"for (let "+varName+" = 0; "+varName+" < ("+expression(f.count,"0")+"); "+varName+"++) {":"for "+varName+" = 1, "+expression(f.count,"0")+" do"));
@@ -359,6 +359,22 @@ export function lint(project){
     }
     const issue=(message,severity="error")=>problems.push({id:b.id,message,severity});
     if(["variable","set","increment","function","call"].includes(b.type)&&!validName(f.name))issue("Invalid identifier: "+f.name);
+    if(b.type==="variable"&&f.type?.trim()&&(!/^[A-Za-z_][\w.]*\??$/.test(f.type.trim())||project.language!=="luau"))
+      issue("Variable type annotations require a Luau identifier such as number, string or Player.");
+    if(b.type==="function"){
+      const args=String(f.params||"").trim();
+      if(args){
+        const parameters=args.split(",").map(x=>x.trim()),names=new Set();
+        for(const parameter of parameters){
+          const match=/^([A-Za-z_]\w*)(?:\s*:\s*[A-Za-z_][\w.]*\??)?$/.exec(parameter);
+          if(!match||names.has(match[1])){issue("Invalid or duplicate function parameter: "+parameter);break;}
+          if(project.language==="javascript"&&parameter.includes(":"))issue("Luau parameter types cannot be used in JavaScript.");
+          names.add(match[1]);
+        }
+      }
+      if(f.returnType?.trim()&&(project.language!=="luau"||!/^[A-Za-z_]\w*\??$/.test(f.returnType.trim())))
+        issue("Function return type needs a valid Luau type name.");
+    }
     if(b.type==="service"&&!validName(f.alias))issue("Invalid service alias: "+f.alias);
     if(b.type==="service"&&!/^[A-Za-z][A-Za-z0-9]+$/.test(f.service))issue("Invalid Roblox service name");
     if(b.type==="setProperty"&&!validName(f.property))issue("Invalid property name: "+f.property);
