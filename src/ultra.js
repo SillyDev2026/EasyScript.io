@@ -108,8 +108,19 @@ export function auditProject(project){
   if(blocks.length>150)suggest(null,"warning","Large visual workspace","Split logic into functions and export regular backups.");
   if(blocks.some(b=>b.depth>=8))suggest(null,"warning","Deep nesting","Simplify nested conditions or extract functions.");
   let loops=0,events=0;
+  // A single traversal replaces one full tree search per block (O(n²) on large scripts).
+  const byId=new Map(),frameBlocks=new Set();
+  function collect(nodes,frame=false){
+    for(const node of nodes){
+      byId.set(node.id,node);
+      const isFrame=frame||["eventHeartbeat","eventRenderStep"].includes(node.type);
+      if(isFrame)frameBlocks.add(node.id);
+      for(const branch of DEFINITIONS[node.type]?.branches||[])collect(node[branch]||[],isFrame);
+    }
+  }
+  collect(project.blocks||[]);
   for(const block of blocks){
-    const raw=findBlock(project.blocks,block.id);
+    const raw=byId.get(block.id);
     if(block.type==="while"){
       loops++;
       suggest(block.id,"warning","While loop can run indefinitely","Ensure the condition eventually becomes false; yield during continuous Roblox loops.");
@@ -123,7 +134,18 @@ export function auditProject(project){
       events++;
       suggest(block.id,"warning","RemoteEvent trust boundary","Validate client types, ranges, rate limits and authorization on the server.");
     }
-    if(block.type==="partTouched"||block.type==="playerJoined")events++;
+    if(["partTouched","playerJoined","playerLeaving","characterAdded","eventChildAdded","eventChildRemoved",
+        "eventAttribute","eventHumanoidDied","eventProximity","eventClick","eventHeartbeat",
+        "eventRenderStep","eventTouchedEnded","remoteClientEvent","uiButtonClick","uiFocusLost"].includes(block.type))events++;
+    if(["each","forRange"].includes(block.type))loops++;
+    if(["eventHeartbeat","eventRenderStep"].includes(block.type))
+      suggest(block.id,"warning","Per-frame event","Avoid costly synchronous work inside per-frame callbacks; use throttling or state changes.");
+    if(frameBlocks.has(block.id)&&["instanceDescendants","instanceChildren","instanceWait","datastoreGet","datastoreSet"].includes(block.type))
+      suggest(block.id,"warning","Expensive work inside frame loop","Cache lookups and avoid DataStore requests in a frame callback.");
+    if(["datastoreGet","datastoreSet"].includes(block.type))
+      suggest(block.id,"warning","DataStore budget","Use server-side request budgets, retries and schema validation for production saves.");
+    if(block.type==="forRange"&&Number(raw?.fields?.end)-Number(raw?.fields?.start)>50000)
+      suggest(block.id,"warning","Large numeric range","Break expensive work into smaller batches and yield when appropriate.");
   }
   const errors=diagnostics.filter(x=>x.severity==="error").length;
   const warnings=diagnostics.filter(x=>x.severity==="warning").length;
