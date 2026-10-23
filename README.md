@@ -1,4 +1,71 @@
-# EasyScript.io v1.4.0 — Adaptive UI and Percentage Layout Update
+# EasyScript.io v2.0.0 — Visual Development and Project Workflow Upgrade
+
+**Luau-first browser visual scripting** with 172 built-in blocks, a multi-file workspace, responsive layouts, Ultra tools and an optional manual Roblox Studio importer.
+
+[Launch](https://sillydev2026.github.io/EasyScript.io/) · [GitHub repository](https://github.com/SillyDev2026/EasyScript.io)
+
+## Milestones: v1.5 through v2.0
+
+### v1.5–v1.6 — Persisted connected expressions
+
+- Nested typed expression nodes can be dragged between slots or copied/pasted using buttons that also work on touch screens.
+- Saved expression trees survive local autosave, workspace backups, ZIP/JSON exports, imports and undo/redo.
+- Reopening the expression editor restores the visual tree. Manual edits to the raw field detach the saved tree to prevent stale values from silently reappearing.
+- Extra less-than, greater-or-equal, inequality and modulo operators. Common arithmetic and boolean source expressions can be reconstructed as socket trees without executing source.
+- Unsupported or unsafe expression structures are rejected or explicitly diagnosed.
+
+### v1.7 — Conservative source-to-block importer
+
+- Open **Developer Workbench → Code → Blocks** and paste source.
+- Supports simple Luau/JavaScript variables, assignments, increments, prints, comments, conditions, while/repeat loops and functions. Also supports Luau waits, typed variable declarations, and simple PlayerAdded events.
+- Reports exact line numbers for unsupported statements and nesting errors.
+- All-or-nothing: errors prevent the current visual project from being replaced; successful conversion still requires confirmation.
+- This is a limited parser, **not a lossless Luau or JavaScript AST round-trip**. Complex Roblox APIs and unsupported language constructs cannot be safely reconstructed.
+
+### v1.8–v1.9 — Offline change review and conflict-safe imports
+
+- **Offline patches** saves a local baseline, compares file additions/changes/deletions and exports a shareable JSON patch.
+- Incoming patches are inspected before application. Changes are refused if their base content fingerprint does not match the current workspace.
+- Fingerprints are not security signatures. There is no hosted GitHub sync, authentication or realtime multiplayer editing.
+
+### v2.0 — Studio runtime profiling scaffold
+
+- The **Studio profiler** tab exports a Luau Profiler ModuleScript and a separate example Script.
+- Inside Roblox Studio you may manually wrap selected callbacks with Profiler.measure to measure elapsed time in milliseconds, count, average, maximum and failures.
+- The website itself does **not** connect to a running game, inspect remote runtime state or act as a live debugger.
+
+### UI, exporting and verification
+
+- Keeps v1.4 percentage-width desktop layout, tablet split layout, folded/mobile tabs, safe-area padding and adjustable UI scaling.
+- Developer Workbench includes code conversion, offline patches, expression graph inspector, static project preflight and the Studio profiler.
+- The workspace ZIP exporter includes individual generated Luau/JS files, editable backup and user-defined custom block definitions.
+
+## Getting started
+
+1. Click **◇ Build** beside an expression field. Drag nodes between sockets or use the Copy/Paste buttons, then apply the expression.
+2. Open the v2 workbench's Code → Blocks panel to try supported source import. Unsupported source never replaces your existing script.
+3. In Offline patches set a baseline, edit some files, export a patch and review the change list before any import.
+4. In Studio profiler download the separate ModuleScript and example, inspect both, and run them manually in Roblox Studio.
+
+## Local checks
+
+~~~sh
+npm run check
+npm test
+python3 -m http.server 8080
+~~~
+
+## Important boundaries
+
+**This is the v2 browser-app release, not the completion of all previously proposed infrastructure-dependent Ultra systems.** The following remain unimplemented: a full Blockly/Scratch snap-to-socket canvas; universal, lossless bidirectional Luau parsing; live Roblox Studio synchronization/debugging; hosted cloud backups; OAuth GitHub sync; live multiplayer collaboration; and hosted AI coding assistance. These require dedicated infrastructure or much larger language tooling. Existing Studio import is manual and one-way.
+
+All static checks and heuristics require developer review. Roblox scripts require Roblox Studio runtime testing, correct Script/LocalScript placement, secure remotes and DataStore budget/error handling. Export durable ZIP/JSON backups before clearing browser storage.
+
+---
+
+## Previous v1.4 release notes
+
+
 
 [Launch EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [GitHub source](https://github.com/SillyDev2026/EasyScript.io)
 
