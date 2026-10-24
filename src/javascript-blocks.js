@@ -1,4 +1,5 @@
-import {inlineExpression,identifierOK} from "./format.js";
+import {inlineExpression} from "./format.js";
+import {validJSName} from "./javascript-v21.js";
 // Browser-oriented JavaScript blocks. No pretend Luau equivalents are generated.
 const defs={};
 const builders={};
@@ -62,7 +63,7 @@ export function javascriptDiagnostics(block,language){
   if(language!=="javascript")issue("JavaScript-only block: "+defs[block.type].name,"warning");
   for(const [key,value] of Object.entries(block.fields||{})){
     if(!String(value??"").trim())issue("Missing "+key+" field");
-    if(key==="name"&&!identifierOK(value))issue("Invalid JavaScript variable name: "+value);
+    if(key==="name"&&!validJSName(value))issue("Invalid JavaScript variable name: "+value);
   }
   if(block.type==="jsFetchJson")issue("Fetch requires network access and a CORS-permitted endpoint.","warning");
   if(["jsQuery","jsQueryAll","jsClickEvent","jsSetText","jsSetValue","jsAddClass","jsRemoveClass","jsSetAttribute"].includes(block.type))
