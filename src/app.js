@@ -14,6 +14,7 @@ import {mountUltraExpansion} from "./ultra-expansion.js";
 import {mountUltraSuite} from "./ultra-suite-ui.js";
 import {loadCustomDefinitions} from "./custom-blocks.js";
 import {storeSocket,clearSocket} from "./v2-expressions.js";
+import {PACKS} from "./packs.js";
 import {mountV2Studio} from "./v2-developer-ui.js";
 
 const $ = id => document.getElementById(id);
@@ -516,9 +517,10 @@ function bindActions(){
   $("language").addEventListener("change",event=>{checkpoint();project.language=event.target.value;commitActive(workspace,project);updateOutputs();persist();updateHistory();palette();workspaceUI?.refresh();});
   $("loadTemplateBtn").addEventListener("click",()=>{
     if(project.blocks.length&&!confirm("Load a template? Your current blocks will be replaced."))return;
-    const language=project.language;
-    mutate(()=>{project=projectTemplate($("template").value);
-      if(!["leaderstats","touch","remote","globalCounter","uiButton","doorPrompt","playerData","remoteReply","vectors","jsPage","jsStorage","jsRequest"].includes($("template").value))project.language=language;
+    const language=project.language,templateId=$("template").value;
+    const fixedLanguage=PACKS.some(pack=>pack.id===templateId)||["leaderstats","touch","remote","attributes"].includes(templateId);
+    mutate(()=>{project=projectTemplate(templateId);
+      if(!fixedLanguage)project.language=language;
     });
     notify("Template loaded. Customize each block to get started.");
   });
