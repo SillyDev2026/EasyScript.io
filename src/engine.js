@@ -432,6 +432,38 @@ export function lint(project){
   });
   for(const c of calls)if(!functions.has(c.fields.name))problems.push({id:c.id,message:"Undefined function: "+c.fields.name,severity:"error"});
   traverse(project.blocks,b=>{if(["set","increment"].includes(b.type)&&!declared.has(b.fields.name))problems.push({id:b.id,message:"Variable has no create block: "+b.fields.name,severity:"warning"});});
+
+  // Keep local variables from shadowing hoisted Roblox service references, and
+  // warn when siblings declare the same local name (including new catalog blocks).
+  const isDeclaration=b=>b.type==="variable"||b.type==="array"||b.type==="function"||
+    b.type==="requireModule"||b.type==="datastoreGet"||b.type==="globalRead"||
+    ((Object.hasOwn(LUAU_V21_DEFINITIONS,b.type)||
+      Object.hasOwn(JS_V21_DEFINITIONS,b.type)||
+      Object.hasOwn(EXPANDED_LUAU_DEFINITIONS,b.type)||
+      Object.hasOwn(EXPANDED_JS_DEFINITIONS,b.type)||
+      Object.hasOwn(JS_DEFINITIONS,b.type))&&
+      Object.hasOwn(DEFINITIONS[b.type]?.fields||{},"name"));
+  const validateDeclarations=list=>{
+    const siblingNames=new Map();
+    for(const block of list){
+      if(block.disabled)continue;
+      const name=block.type==="service"?String(block.fields.alias||""):
+        isDeclaration(block)?String(block.fields.name||""):"";
+      if(name){
+        if(project.language==="luau"&&
+           ((needsPlayersAlias&&name==="Players")||(needsStoreAlias&&name==="DataStoreService")))
+          problems.push({id:block.id,severity:"error",
+            message:"Variable "+name+" shadows the automatically generated Roblox service handle; rename it."});
+        if(siblingNames.has(name))
+          problems.push({id:block.id,severity:"warning",
+            message:"Duplicate local "+name+" in the same block scope may shadow "+siblingNames.get(name)+"."});
+        else siblingNames.set(name,block.type);
+      }
+      for(const branch of DEFINITIONS[block.type]?.branches||[])
+        validateDeclarations(block[branch]||[]);
+    }
+  };
+  validateDeclarations(project.blocks);
   return problems;
 }
 export function simulate(project) {
