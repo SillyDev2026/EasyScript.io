@@ -42,7 +42,7 @@ export function layoutVariables(prefs={}){
     "--pane-editor-fr":p.editor+"fr",
     "--pane-right-fr":p.right+"fr",
     "--pane-bottom-editor-fr":(100-p.left)+"fr",
-    "--pane-height-vh":String(p.height),
+    "--pane-height-size":p.height+"dvh",
     "--ui-scale":String(p.scale/100)
   };
 }
