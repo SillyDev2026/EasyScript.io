@@ -107,3 +107,35 @@ test("generated assignments stay on one physical line",()=>{
  assert.doesNotMatch(code,/=\s*\n/);
  assert.ok(lint(p).some(x=>x.severity==="error"&&x.message.includes("line")));
 });
+
+test("hoisted Roblox service names cannot be accidentally shadowed by user variables",()=>{
+ const players=blank("luau");
+ addBlock(players,"playerJoined");
+ addBlock(players,"variable").fields.name="Players";
+ assert.ok(lint(players).some(x=>x.severity==="error"&&x.message.includes("service handle")));
+ const datastore=blank("luau");
+ addBlock(datastore,"datastoreGet");
+ addBlock(datastore,"variable").fields.name="DataStoreService";
+ assert.ok(lint(datastore).some(x=>x.severity==="error"&&x.message.includes("DataStoreService")));
+});
+test("multiple new blocks with the same declared local trigger a duplicate diagnostic",()=>{
+ const p=blank("luau");
+ addBlock(p,"luaGetAttribute");
+ addBlock(p,"luaGetAttribute");
+ assert.ok(lint(p).some(x=>x.severity==="warning"&&x.message.includes("Duplicate local health")));
+ const js=blank("javascript");
+ addBlock(js,"js21NewSet");addBlock(js,"js21NewSet");
+ assert.ok(lint(js).some(x=>x.severity==="warning"&&x.message.includes("Duplicate local unique")));
+});
+test("eight v2.1 educational templates compile in their correct scripting language",()=>{
+ const templates=["luaAttributeWatch","luaTweenDemo","luaPromptDemo","luaJsonDemo",
+   "jsArrayDemo","jsMapDemo","jsFormDemo","jsQueryDemo"];
+ for(const type of templates){
+  const p=projectTemplate(type);
+  assert.ok(p.blocks.length>0,type);
+  assert.ok(lint(p).every(issue=>issue.severity!=="error"),type+":"+JSON.stringify(lint(p)));
+  const generated=generate(p);
+  assert.doesNotMatch(generated,/Unsupported block:/,type);
+  if(p.language==="javascript")assert.doesNotThrow(()=>new vm.Script(generated),type);
+ }
+});
