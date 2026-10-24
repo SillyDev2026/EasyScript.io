@@ -47,6 +47,7 @@ export function mountStudio({getProject,notify,renderPalette}){
     '<label class="studio-switch"><input id="wrapToggle" type="checkbox"> Wrap code</label>',
     '<div class="studio-jump"><input id="blockJump" type="search" placeholder="Find a block in this script…" aria-label="Find block in project" autocomplete="off"><div id="jumpResults" class="jump-results" hidden></div></div>',
     '<button id="resetLayout" class="btn compact ghost" type="button">Reset layout</button>',
+    '<span class="studio-layout-explainer">Widths are percentages of the available editor row (excluding gaps). Panel height is a percentage of the visible screen.</span>',
     '</div>',
     '<nav class="mobile-nav" aria-label="Mobile workspace views"><button type="button" data-view="blocks">Blocks</button><button type="button" data-view="workspace">Workspace</button><button type="button" data-view="code">Code</button></nav>'
   ].join("");
