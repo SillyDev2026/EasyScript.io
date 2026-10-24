@@ -5,7 +5,7 @@ import {DEFINITIONS,projectTemplate,addBlock,generate,lint} from "../src/engine.
 import {EXPANDED_JS_DEFINITIONS} from "../src/expanded-javascript.js";
 test("15 new browser blocks are installed",()=>{
  assert.equal(Object.keys(EXPANDED_JS_DEFINITIONS).length,15);
- assert.equal(Object.keys(DEFINITIONS).length,172);
+ assert.equal(Object.keys(DEFINITIONS).length,249);
 });
 test("new JS blocks compile to syntax-valid JavaScript with existing async main wrapper",()=>{
  for(const type of Object.keys(EXPANDED_JS_DEFINITIONS)){
