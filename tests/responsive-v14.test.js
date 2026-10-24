@@ -5,16 +5,16 @@ import {normalizeLayoutPrefs,layoutMode,displayedPaneWidths,DEFAULT_LAYOUT,BREAK
 
 test("default percentages distribute desktop library, workspace and code to exactly 100%",()=>{
  const p=normalizeLayoutPrefs({});
- assert.deepEqual(p,{left:19,right:29,editor:52,scale:100});
+ assert.deepEqual(p,{left:19,right:29,editor:52,scale:100,height:72,dock:"right"});
  const widths=displayedPaneWidths(1920,p);
  assert.equal(widths.blocks+widths.workspace+widths.code,100);
  assert.equal(widths.mode,"desktop");
  assert.equal(widths.visibleOneAtATime,false);
 });
 test("saved custom percentages, scale and reset defaults are normalized",()=>{
- assert.deepEqual(normalizeLayoutPrefs(DEFAULT_LAYOUT),{left:19,right:29,editor:52,scale:100});
- assert.deepEqual(normalizeLayoutPrefs({left:24,right:34,scale:115}),{left:24,right:34,editor:42,scale:115});
- assert.deepEqual(normalizeLayoutPrefs({left:"25",right:"36",scale:"105"}),{left:25,right:36,editor:39,scale:105});
+ assert.deepEqual(normalizeLayoutPrefs(DEFAULT_LAYOUT),{left:19,right:29,editor:52,scale:100,height:72,dock:"right"});
+ assert.deepEqual(normalizeLayoutPrefs({left:24,right:34,scale:115}),{left:24,right:34,editor:42,scale:115,height:72,dock:"right"});
+ assert.deepEqual(normalizeLayoutPrefs({left:"25",right:"36",scale:"105"}),{left:25,right:36,editor:39,scale:105,height:72,dock:"right"});
 });
 test("invalid, missing, NaN and infinite persisted preferences cannot create broken geometry",()=>{
  for(const raw of [null,undefined,{}, {left:"NaN",right:Infinity,scale:"NaN"},
