@@ -71,7 +71,7 @@ test("Studio toolbar exposes percentage sliders, center share and size slider",(
  for(const id of ["leftSize","rightSize","centerPercent","uiScale","uiScalePercent","screenMode"]){
   assert.ok(studio.includes('id="'+id+'"'),id);
  }
- assert.match(studio,/setProperty\("--ui-scale"/);
+ assert.match(studio,/layoutVariables\(prefs\)/);
  assert.match(studio,/normalizeLayoutPrefs\(prefs\)/);
  assert.match(studio,/addEventListener\("resize",updateMode/);
 });
