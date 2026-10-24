@@ -81,6 +81,20 @@
 #resetLayout {flex:0 0 auto}
 .studio-toolbar {max-width:100%;min-width:0}
 .studio-mode {white-space:normal;overflow-wrap:anywhere}
+/* Focus mode respects the same user-selected screen-height percentage. */
+body[data-focus="true"] .layout > .editor-panel {
+  height:var(--pane-height-size);
+  min-height:0;
+  max-height:none;
+  width:100%;
+}
+.studio-layout-explainer {
+  color:var(--text-muted,#9eb5d1);
+  font-size:11px;
+  flex:1 1 100%;
+  line-height:1.45;
+  white-space:normal;
+}
 /* User-controlled code placement on wide screens. */
 @media (min-width:1281px) {
  body[data-code-dock="bottom"]:not([data-focus="true"]) .layout{
