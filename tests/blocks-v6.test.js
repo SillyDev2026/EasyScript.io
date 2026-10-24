@@ -56,7 +56,7 @@ test("script globals are ordinary Luau locals and JavaScript globalThis",()=>{
 });
 
 test("all starter packs produce an appropriate source language and diagnostics",()=>{
-  assert.equal(PACKS.length,9);
+  assert.equal(PACKS.length,17);
   for(const item of PACKS){
     const p=projectTemplate(item.id);
     assert.equal(p.language,item.language,item.id);
