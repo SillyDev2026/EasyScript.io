@@ -1,5 +1,5 @@
 import {outlineProject,auditProject,generateRobloxSystem,SYSTEM_KINDS} from "./ultra.js";
-import {normalizeLayoutPrefs,displayedPaneWidths,DEFAULT_LAYOUT} from "./responsive-layout.js";
+import {normalizeLayoutPrefs,displayedPaneWidths,layoutVariables,DEFAULT_LAYOUT} from "./responsive-layout.js";
 
 const PREFS_KEY="easyscript_studio_v4";
 const DEFAULTS={theme:"dark",density:"comfortable",...DEFAULT_LAYOUT,wrap:false,lines:true,focus:false,mobile:"workspace",favorites:[],recent:[]};
@@ -38,8 +38,10 @@ export function mountStudio({getProject,notify,renderPalette}){
     '</div></div>',
     '<div class="studio-toolbar-bottom">',
     '<label class="studio-size-control">Blocks <input id="leftSize" type="range" min="15" max="31" step="1" aria-label="Blocks pane width percentage"><output id="leftPercent">19%</output></label>',
-    '<label class="studio-size-control">Code <input id="rightSize" type="range" min="22" max="42" step="1" aria-label="Code pane width percentage"><output id="rightPercent">29%</output></label>',
+    '<label class="studio-size-control studio-code-width-control">Code <input id="rightSize" type="range" min="22" max="42" step="1" aria-label="Code pane width percentage"><output id="rightPercent">29%</output></label>',
     '<span class="studio-editor-share" title="Remaining available workspace width">Editor <output id="centerPercent">52%</output></span>',
+    '<label class="studio-screen-height">Panel height <input id="panelHeight" type="range" min="45" max="95" step="1" aria-label="Panel height as a percentage of screen height"><output id="panelHeightPercent">72%</output></label>',
+    '<label class="studio-code-position">Code position <select id="codeDock" aria-label="Place code panel on right or below workspace"><option value="right">Right</option><option value="bottom">Below</option></select></label>',
     '<label class="studio-scale-control">UI scale <input id="uiScale" type="range" min="85" max="120" step="5" aria-label="Interface size percentage"><output id="uiScalePercent">100%</output></label>',
     '<label class="studio-switch"><input id="lineToggle" type="checkbox"> Line numbers</label>',
     '<label class="studio-switch"><input id="wrapToggle" type="checkbox"> Wrap code</label>',
@@ -71,8 +73,19 @@ export function mountStudio({getProject,notify,renderPalette}){
   }
   function updateMode(){
     const widths=displayedPaneWidths(window.innerWidth,prefs);
-    $("screenMode").textContent=widths.mode==="phone"?"Phone · 100% tabs":widths.mode==="tablet"?"Tablet · 2 panels":"Desktop · 3 panels";
+    const label=widths.mode==="phone"?"Phone · 100% width tabs":
+      widths.mode==="tablet"?"Tablet · 26% / 74%, code below":
+      widths.dock==="bottom"?"Desktop · "+widths.blocks+"% / "+widths.workspace+"%, code below":
+      "Desktop · "+widths.blocks+"% / "+widths.workspace+"% / "+widths.code+"%";
+    $("screenMode").textContent=label;
+    $("centerPercent").textContent=widths.workspace+"%";
+    $("rightPercent").textContent=widths.code+"%";
+    $("rightSize").disabled=widths.dock!=="right";
+    $("codeDock").disabled=widths.mode!=="desktop";
+    $("codeDock").title=widths.mode==="desktop"?"Choose the code panel position":
+      "Code placement follows the screen width automatically";
     document.body.dataset.layoutMode=widths.mode;
+    document.body.dataset.codeDock=widths.dock;
   }
   function apply(){
     Object.assign(prefs,normalizeLayoutPrefs(prefs));
@@ -82,7 +95,8 @@ export function mountStudio({getProject,notify,renderPalette}){
     document.body.dataset.mobileView=prefs.mobile;
     document.documentElement.style.setProperty("--left-pane",prefs.left+"%");
     document.documentElement.style.setProperty("--right-pane",prefs.right+"%");
-    document.documentElement.style.setProperty("--ui-scale",String(prefs.scale/100));
+    for(const [key,value] of Object.entries(layoutVariables(prefs)))
+      document.documentElement.style.setProperty(key,value);
     pre.classList.toggle("wrapped-code",prefs.wrap);
     pre.classList.toggle("show-gutter",prefs.lines&&!prefs.wrap);
     $("themeChoice").value=prefs.theme;
@@ -92,6 +106,9 @@ export function mountStudio({getProject,notify,renderPalette}){
     $("leftPercent").textContent=prefs.left+"%";
     $("rightPercent").textContent=prefs.right+"%";
     $("centerPercent").textContent=(100-prefs.left-prefs.right)+"%";
+    $("panelHeight").value=prefs.height;
+    $("panelHeightPercent").textContent=prefs.height+"%";
+    $("codeDock").value=prefs.dock;
     $("uiScale").value=prefs.scale;
     $("uiScalePercent").textContent=prefs.scale+"%";
     updateMode();
@@ -109,6 +126,8 @@ export function mountStudio({getProject,notify,renderPalette}){
   $("densityChoice").addEventListener("change",e=>{prefs.density=e.target.value==="compact"?"compact":"comfortable";apply();});
   $("leftSize").addEventListener("input",e=>{prefs.left=Number(e.target.value);apply();});
   $("rightSize").addEventListener("input",e=>{prefs.right=Number(e.target.value);apply();});
+  $("panelHeight").addEventListener("input",e=>{prefs.height=Number(e.target.value);apply();});
+  $("codeDock").addEventListener("change",e=>{prefs.dock=e.target.value==="bottom"?"bottom":"right";apply();});
   $("uiScale").addEventListener("input",e=>{prefs.scale=Number(e.target.value);apply();});
   $("lineToggle").addEventListener("change",e=>{prefs.lines=e.target.checked;apply();});
   $("wrapToggle").addEventListener("change",e=>{prefs.wrap=e.target.checked;apply();});
