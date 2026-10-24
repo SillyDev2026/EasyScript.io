@@ -7,7 +7,7 @@ import {allBlocks,performBulk,normalizeSelection,setBlockNote,renameVariable,sav
  listSnippets,insertSnippet,toggleBookmark,listBookmarks,diagnosticSummary,projectSourceMinimap} from "../src/editor-ops.js";
 const memory=()=>{const entries=new Map();return {getItem:k=>entries.get(k)||null,setItem:(k,v)=>entries.set(k,String(v))};};
 test("v1.2 contains 26 more Roblox blocks and 249 total",()=>{
- assert.equal(VERSION,"2.1.0");
+ assert.equal(VERSION,"2.2.0");
  assert.equal(Object.keys(EXPANDED_LUAU_DEFINITIONS).length,26);
  assert.equal(Object.keys(DEFINITIONS).length,249);
 });
