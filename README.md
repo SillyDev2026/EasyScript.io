@@ -1,4 +1,42 @@
-# EasyScript.io v2.1.0 — Luau and JavaScript Block Expansion
+# EasyScript.io v2.2.0 — Screen-Percentage UI and Positioning
+
+[Open the app](https://sillydev2026.github.io/EasyScript.io/) · [Repository](https://github.com/SillyDev2026/EasyScript.io)
+
+## What changed in v2.2
+
+This release addresses the positioning and scaling conflicts left by several generations of CSS. A final, last-loaded stylesheet (\`styles/screen-percent-v22.css\`) owns screen-width layouts, panel heights, code placement and responsive controls.
+
+**Screen-relative controls**
+
+- **Blocks and Code width:** adjustable on desktop using 15–31% and 22–42% controls respectively; Editor width is calculated as the remaining portion. Shares are measured within the usable editor row **after gaps** rather than claiming that the panel occupies that exact percentage of the entire physical screen.
+- **Panel height:** new **45–95% of the visible viewport height** slider (default 72%), expressed in CSS dynamic viewport-height units (dvh). Applies to library, editor, source/diagnostics and focused editor panels.
+- **Code position:** choose **Right** or **Below** on wide desktop screens. If below, Blocks and Editor share the first row and Code is full width beneath them.
+- **UI scale:** existing 85–120% slider remains for text and key control sizes. It is not browser zoom.
+- **Reset Layout:** restores 19% Blocks / 52% Editor / 29% Code on desktop, code to the right, 72% viewport-height panels, and 100% UI scale.
+
+**Responsive layout**
+
+- Desktop screens wider than 1280 CSS px: fully proportional three-column layout, or two columns with code below.
+- Tablet/unfolded compact windows 761–1280px: 26% Blocks and 74% Editor across the first row, with full-width Code underneath. Docking is automatic at these widths.
+- Phone / cover-screen widths up to 760px: **one selected panel at 100% available width**, selected with Blocks / Workspace / Code tabs. Internally scrolling panes use the chosen screen-height percentage.
+- On narrow phones, touch controls stack; short-height landscape views can scroll without needing to overlap adjacent panels.
+- CSS safe-area padding and keyboard-friendly scrolling remain in place.
+
+**Reliability and QA**
+
+- Invalid, null, empty, Infinity or out-of-bounds saved display settings normalize to safe ranges instead of producing broken grid sizes.
+- The layout mode indicator reports the **effective responsive split** when the viewport changes, not just stale slider values.
+- Code width and dock controls are disabled or hidden when responsive breakpoints control their position automatically.
+- Existing Focus Mode now respects the selected panel-height percentage.
+- Regression tests cover the expected width ratios, height units, dock position, mobile/desktop breakpoints, focus sizing, and legacy preference migration.
+
+This is not a claim to have fixed every existing bug. Automated tests do not replace real Chrome/Firefox/Android device visual checks, especially foldable orientation, accessibility scaling, or virtual-keyboard resizing. Test those using the live Pages site once its deployment completes.
+
+---
+
+## Previous v2.1 release notes
+
+
 
 **249 built-in blocks total** · **77 new blocks** (39 Roblox Luau + 38 JavaScript) · 17 starter packs · responsive visual scripting.
 
