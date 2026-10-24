@@ -29,7 +29,7 @@ export function mountStudio({getProject,notify,renderPalette}){
   toolbar.setAttribute("aria-label","Studio display and quick tools");
   toolbar.innerHTML=[
     '<div class="studio-toolbar-top">',
-    '<div class="studio-toolbar-title"><strong>Studio controls</strong><span>v2.0 · Adaptive workspace</span><span id="screenMode" class="studio-mode" role="status">Desktop</span></div>',
+    '<div class="studio-toolbar-title"><strong>Studio controls</strong><span>v2.1 · Adaptive workspace</span><span id="screenMode" class="studio-mode" role="status">Desktop</span></div>',
     '<div class="studio-toolbar-controls">',
     '<label>Theme <select id="themeChoice"><option value="dark">Midnight</option><option value="light">Daylight</option></select></label>',
     '<label>Density <select id="densityChoice"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>',
