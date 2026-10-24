@@ -1,4 +1,5 @@
-import {inlineExpression,identifierOK} from "./format.js";
+import {inlineExpression} from "./format.js";
+import {validJSName} from "./javascript-v21.js";
 const catalog={};
 const reg=(id,name,fields,render,branches=[])=>{
  catalog[id]={name,group:"JavaScript · Browser",color:"pink",fields,branches,render};
@@ -45,7 +46,7 @@ export function expandedJSDiagnostics(block,language){
   const value=String(f[key]??"");
   if(!value.trim())add("Field "+key+" cannot be empty");
   if(/[\r\n]/.test(value))add("Multiline value in "+key);
-  if(key==="name"&&!identifierOK(value))add("Invalid JavaScript identifier: "+value);
+  if(key==="name"&&!validJSName(value))add("Invalid JavaScript identifier: "+value);
  }
  if(["jsListenEvent","jsSetInterval"].includes(block.type))add("Callbacks should handle async errors and avoid unbounded work.","warning");
  if(block.type==="jsFetchText")add("Requires an available endpoint with suitable CORS policy.","warning");
