@@ -46,3 +46,14 @@ export function layoutVariables(prefs={}){
     "--ui-scale":String(p.scale/100)
   };
 }
+
+export const DEFAULT_SHELL=Object.freeze({shellWidth:100,shellAlign:"center"});
+export function normalizeShellPrefs(raw={}){
+ const input=raw&&typeof raw==="object"?raw:{};
+ const width=Number(input.shellWidth);
+ return {
+  shellWidth:input.shellWidth===null||input.shellWidth===undefined||input.shellWidth===""||!Number.isFinite(width)?
+   DEFAULT_SHELL.shellWidth:Math.max(85,Math.min(100,Math.round(width))),
+  shellAlign:["left","center","right"].includes(input.shellAlign)?input.shellAlign:"center"
+ };
+}
