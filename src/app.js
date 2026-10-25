@@ -58,6 +58,7 @@ let editorPro = null;
 let ultraExpansion = null;
 let ultraSuite = null;
 let v2Studio = null;
+let blockCopyFallback = null;
 let outputFrame = 0;
 function queueOutputs(){
   if(outputFrame)return;
@@ -349,7 +350,7 @@ function blockView(block) {
   peekPre.append(peekCode);
   const peekCopy=actionButton("⧉ Copy snippet","Copy generated block preview",()=>{
     const snippet=sourceForCode({...project,blocks:[block]});
-    copyCodeWithFallback(snippet,notify,createCopyFallback());
+    copyCodeWithFallback(snippet,notify,blockCopyFallback??(blockCopyFallback=createCopyFallback()));
   });
   peek.append(peekNote,peekCopy,peekPre);
   const refreshPeek=()=>{
