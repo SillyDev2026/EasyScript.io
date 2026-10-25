@@ -16,8 +16,8 @@
     <header class="header">
       <div class="header-brand">
         <div class="logo" aria-hidden="true"><span>&lt;</span><span class="logo-spark">◆</span><span>/&gt;</span></div>
-        <div class="brand-words"><strong>EasyScript<span class="brand-dot">.io</span></strong><span>Visual scripting studio · v2.2</span></div>
-        <span class="version">VERSION 2.2.0</span>
+        <div class="brand-words"><strong>EasyScript<span class="brand-dot">.io</span></strong><span>Visual scripting studio · v2.3</span></div>
+        <span class="version">VERSION 2.3.0</span>
       </div>
       <div class="header-actions">
         <span id="saveStatus" class="saved" aria-live="polite"><span class="status-light"></span> Saved locally</span>
@@ -94,7 +94,15 @@
       <aside class="panel result-panel" aria-label="Generated code and diagnostics">
         <div class="panel-top"><div><div class="eyebrow">03 / OUTPUT</div><h2>Generated code</h2></div><span id="languageBadge" class="lang-badge">LUAU</span></div>
         <div class="tabs" role="tablist" aria-label="Results"><button role="tab" aria-selected="true" class="tab active" id="codeTab">Code</button><button role="tab" aria-selected="false" class="tab" id="diagnosticsTab">Diagnostics <span id="issueCount">0</span></button><button role="tab" aria-selected="false" class="tab" id="consoleTab">Console</button></div>
-        <div id="codePane" class="result-content" role="tabpanel"><div class="code-toolbar"><span id="codeFilename">script.luau</span><button id="copyCodeBtn" class="mini-btn">⧉ Copy</button></div><pre class="code-scroller"><code id="codeOutput"></code></pre></div>
+        <div id="codePane" class="result-content" role="tabpanel">
+          <div class="code-toolbar"><span id="codeFilename">script.luau</span><button id="copyCodeBtn" class="mini-btn">⧉ Copy</button></div>
+          <div class="code-qol-toolbar" aria-label="Generated code appearance">
+            <label for="codeStyle">Style <select id="codeStyle"><option value="readable">Readable</option><option value="compact">Compact</option><option value="raw">Original</option></select></label>
+            <label class="code-label-toggle"><input id="codeLabels" type="checkbox"> Block labels</label>
+            <span id="codeMetrics" class="code-metrics" role="status">0 lines</span>
+          </div>
+          <pre class="code-scroller"><code id="codeOutput"></code></pre>
+        </div>
         <div id="diagnosticsPane" class="result-content hidden" role="tabpanel" aria-live="polite"></div>
         <div id="consolePane" class="result-content hidden" role="tabpanel"><div id="consoleOutput" class="console-lines"><span class="dim">Select “Simulate” to preview simple block logic without executing your script.</span></div></div>
         <div class="result-bottom"><button id="simulateBtn" class="btn run-btn">▶ Simulate</button><p>Simulation runs simple logic only. Roblox events and objects require Roblox Studio.</p></div>
