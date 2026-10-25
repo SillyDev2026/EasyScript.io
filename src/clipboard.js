@@ -21,7 +21,7 @@ export function pasteBlockTree(storage,project,afterId=null){
     language:project.language,
     title:project.title,
     blocks:[JSON.parse(serialized)]
-  });
+  },{regenerateIds:true});
   const block=sanitized.blocks[0];
   if(!block)throw new Error("No supported block was copied");
   if(afterId){
