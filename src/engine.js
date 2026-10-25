@@ -131,7 +131,8 @@ export function sanitizeProject(raw,options={}) {
       const def=DEFINITIONS[b.type];const fields={};
       for(const field of Object.keys(def.fields))fields[field]=String(b.fields?.[field]??def.fields[field]).slice(0,400);
       const originalId=preserveIds&&stableId(b.id)&&!usedIds.has(b.id)?b.id:null;
-      const id=originalId||"import_"+(++sequence);
+      let id=originalId;
+      if(!id){do{id="import_"+(++sequence);}while(usedIds.has(id));}
       usedIds.add(id);
       const out={id,type:b.type,fields};
       if(b.disabled===true)out.disabled=true;
