@@ -1,8 +1,8 @@
 import {outlineProject,auditProject,generateRobloxSystem,SYSTEM_KINDS} from "./ultra.js";
-import {normalizeLayoutPrefs,displayedPaneWidths,layoutVariables,DEFAULT_LAYOUT} from "./responsive-layout.js";
+import {normalizeLayoutPrefs,displayedPaneWidths,layoutVariables,DEFAULT_LAYOUT,DEFAULT_SHELL,normalizeShellPrefs} from "./responsive-layout.js";
 
 const PREFS_KEY="easyscript_studio_v4";
-const DEFAULTS={theme:"dark",density:"comfortable",...DEFAULT_LAYOUT,wrap:false,lines:true,focus:false,mobile:"workspace",favorites:[],recent:[]};
+const DEFAULTS={theme:"dark",density:"comfortable",...DEFAULT_LAYOUT,...DEFAULT_SHELL,wrap:false,lines:true,focus:false,mobile:"workspace",favorites:[],recent:[]};
 const node=(tag,cls,text)=>{
   const el=document.createElement(tag);
   if(cls)el.className=cls;
@@ -12,7 +12,7 @@ const node=(tag,cls,text)=>{
 function readPrefs(){
   try{
     const p=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}");
-    return {...DEFAULTS,...p,...normalizeLayoutPrefs(p),
+    return {...DEFAULTS,...p,...normalizeLayoutPrefs(p),...normalizeShellPrefs(p),
       theme:p.theme==="light"?"light":"dark",
       density:p.density==="compact"?"compact":"comfortable",
       mobile:["blocks","workspace","code"].includes(p.mobile)?p.mobile:"workspace",
@@ -29,29 +29,33 @@ export function mountStudio({getProject,notify,renderPalette}){
   toolbar.setAttribute("aria-label","Studio display and quick tools");
   toolbar.innerHTML=[
     '<div class="studio-toolbar-top">',
-    '<div class="studio-toolbar-title"><strong>Studio controls</strong><span>v2.3 · Adaptive workspace</span><span id="screenMode" class="studio-mode" role="status">Desktop</span></div>',
+    '<div class="studio-toolbar-title"><strong>Studio controls</strong><span>v2.4 · Adaptive workspace</span><span id="screenMode" class="studio-mode" role="status">Desktop</span></div>',
     '<div class="studio-toolbar-controls">',
     '<label>Theme <select id="themeChoice"><option value="dark">Midnight</option><option value="light">Daylight</option></select></label>',
     '<label>Density <select id="densityChoice"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>',
     '<button id="focusModeBtn" class="btn compact" type="button" aria-pressed="false">Focus mode</button>',
     '<button id="shortcutsBtn" class="btn compact ghost" type="button">Shortcuts ?</button>',
     '</div></div>',
+    '<details class="studio-advanced"><summary>Layout & sizing <span class="studio-advanced-hint">Adjust by % of screen</span></summary>',
     '<div class="studio-toolbar-bottom">',
     '<label class="studio-size-control">Blocks <input id="leftSize" type="range" min="15" max="31" step="1" aria-label="Blocks pane width percentage"><output id="leftPercent">19%</output></label>',
     '<label class="studio-size-control studio-code-width-control">Code <input id="rightSize" type="range" min="22" max="42" step="1" aria-label="Code pane width percentage"><output id="rightPercent">29%</output></label>',
     '<span class="studio-editor-share" title="Remaining available workspace width">Editor <output id="centerPercent">52%</output></span>',
     '<label class="studio-screen-height">Panel height <input id="panelHeight" type="range" min="45" max="95" step="1" aria-label="Panel height as a percentage of screen height"><output id="panelHeightPercent">72%</output></label>',
+    '<label class="studio-screen-width">Screen width <input id="shellWidth" type="range" min="85" max="100" step="1" aria-label="Workspace width as percent of screen"><output id="shellWidthPercent">100%</output></label>',
+    '<label class="studio-screen-align">Position <select id="shellAlign" aria-label="Align workspace on screen"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>',
     '<label class="studio-code-position">Code position <select id="codeDock" aria-label="Place code panel on right or below workspace"><option value="right">Right</option><option value="bottom">Below</option></select></label>',
     '<label class="studio-scale-control">UI scale <input id="uiScale" type="range" min="85" max="120" step="5" aria-label="Interface size percentage"><output id="uiScalePercent">100%</output></label>',
     '<label class="studio-switch"><input id="lineToggle" type="checkbox"> Line numbers</label>',
     '<label class="studio-switch"><input id="wrapToggle" type="checkbox"> Wrap code</label>',
     '<div class="studio-jump"><input id="blockJump" type="search" placeholder="Find a block in this script…" aria-label="Find block in project" autocomplete="off"><div id="jumpResults" class="jump-results" hidden></div></div>',
     '<button id="resetLayout" class="btn compact ghost" type="button">Reset layout</button>',
-    '<span class="studio-layout-explainer">Widths are percentages of the available editor row (excluding gaps). Panel height is a percentage of the visible screen.</span>',
-    '</div>',
+    '<span class="studio-layout-explainer">Screen width sets the whole workspace width. Blocks / editor / code share the remaining width by %. Height uses the visible screen (dvh). On phones, panels fill 100% width.</span>',
+    '</div></details>',
     '<nav class="mobile-nav" aria-label="Mobile workspace views"><button type="button" data-view="blocks">Blocks</button><button type="button" data-view="workspace">Workspace</button><button type="button" data-view="code">Code</button></nav>'
   ].join("");
   shell.querySelector(".layout").before(toolbar);
+  toolbar.querySelector(".studio-advanced").open=window.innerWidth>760;
   const $=id=>document.getElementById(id);
 
   const scrollToBlock=id=>{
@@ -89,11 +93,13 @@ export function mountStudio({getProject,notify,renderPalette}){
     document.body.dataset.codeDock=widths.dock;
   }
   function apply(){
-    Object.assign(prefs,normalizeLayoutPrefs(prefs));
+    Object.assign(prefs,normalizeLayoutPrefs(prefs),normalizeShellPrefs(prefs));
     document.documentElement.dataset.theme=prefs.theme;
     document.body.dataset.density=prefs.density;
     document.body.dataset.focus=String(prefs.focus);
     document.body.dataset.mobileView=prefs.mobile;
+    document.body.dataset.shellAlign=prefs.shellAlign;
+    document.documentElement.style.setProperty("--shell-screen-width",prefs.shellWidth+"%");
     document.documentElement.style.setProperty("--left-pane",prefs.left+"%");
     document.documentElement.style.setProperty("--right-pane",prefs.right+"%");
     for(const [key,value] of Object.entries(layoutVariables(prefs)))
@@ -107,6 +113,9 @@ export function mountStudio({getProject,notify,renderPalette}){
     $("leftPercent").textContent=prefs.left+"%";
     $("rightPercent").textContent=prefs.right+"%";
     $("centerPercent").textContent=(100-prefs.left-prefs.right)+"%";
+    $("shellWidth").value=prefs.shellWidth;
+    $("shellWidthPercent").textContent=prefs.shellWidth+"%";
+    $("shellAlign").value=prefs.shellAlign;
     $("panelHeight").value=prefs.height;
     $("panelHeightPercent").textContent=prefs.height+"%";
     $("codeDock").value=prefs.dock;
@@ -128,13 +137,15 @@ export function mountStudio({getProject,notify,renderPalette}){
   $("leftSize").addEventListener("input",e=>{prefs.left=Number(e.target.value);apply();});
   $("rightSize").addEventListener("input",e=>{prefs.right=Number(e.target.value);apply();});
   $("panelHeight").addEventListener("input",e=>{prefs.height=Number(e.target.value);apply();});
+  $("shellWidth").addEventListener("input",e=>{prefs.shellWidth=Number(e.target.value);apply();});
+  $("shellAlign").addEventListener("change",e=>{prefs.shellAlign=e.target.value;apply();});
   $("codeDock").addEventListener("change",e=>{prefs.dock=e.target.value==="bottom"?"bottom":"right";apply();});
   $("uiScale").addEventListener("input",e=>{prefs.scale=Number(e.target.value);apply();});
   $("lineToggle").addEventListener("change",e=>{prefs.lines=e.target.checked;apply();});
   $("wrapToggle").addEventListener("change",e=>{prefs.wrap=e.target.checked;apply();});
   $("focusModeBtn").addEventListener("click",()=>{prefs.focus=!prefs.focus;if(prefs.focus)prefs.mobile="workspace";apply();});
   $("resetLayout").addEventListener("click",()=>{
-    Object.assign(prefs,{...DEFAULT_LAYOUT,density:"comfortable",focus:false,wrap:false,lines:true});
+    Object.assign(prefs,{...DEFAULT_LAYOUT,...DEFAULT_SHELL,density:"comfortable",focus:false,wrap:false,lines:true});
     apply();notify("Layout reset");
   });
   toolbar.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
