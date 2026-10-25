@@ -16,9 +16,22 @@ import {loadCustomDefinitions} from "./custom-blocks.js";
 import {storeSocket,clearSocket} from "./v2-expressions.js";
 import {PACKS} from "./packs.js";
 import {mountV2Studio} from "./v2-developer-ui.js";
+import {DEFAULT_CODE_PREFS,normalizeCodePrefs,polishedProjectSource,countCodeMetrics} from "./code-polish.js";
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "easyscript_project_v2";
+const CODE_PREFS_KEY = "easyscript_code_view_v23";
+function readCodePrefs(){
+  try{return normalizeCodePrefs(JSON.parse(localStorage.getItem(CODE_PREFS_KEY)||"{}"));}
+  catch{return {...DEFAULT_CODE_PREFS};}
+}
+let codePrefs=readCodePrefs();
+function sourceForCode(target=project){
+  return polishedProjectSource(target,generate,DEFINITIONS,codePrefs);
+}
+function saveCodePrefs(){
+  try{localStorage.setItem(CODE_PREFS_KEY,JSON.stringify(codePrefs));}catch{}
+}
 const icons = {print:"▣",variable:"▤",set:"↗",if:"◇",repeat:"⟳",wait:"◷",comment:"≡",function:"ƒ",call:"↳",
   increment:"+1",while:"∞",service:"◈",playerJoined:"♟",partTouched:"◉",remoteReceived:"⇢",
   leaderstat:"★",setProperty:"◆",createPart:"⬡",
@@ -327,7 +340,26 @@ function blockView(block) {
   const header=make("div","block-heading");
   const title=make("strong","",(icons[block.type]||"◈")+"  "+definition.name);
   const buttons=make("div","block-actions");
+  const peek=make("div","block-code-peek");
+  peek.hidden=true;
+  peek.setAttribute("aria-label","Generated source preview for "+definition.name);
+  const peekNote=make("p","block-peek-note","Contextual preview: references and services may be defined elsewhere in your script.");
+  const peekPre=make("pre","block-peek-source");
+  const peekCode=make("code");
+  peekPre.append(peekCode);
+  const peekCopy=actionButton("⧉ Copy snippet","Copy generated block preview",()=>{
+    const snippet=sourceForCode({...project,blocks:[block]});
+    copyCodeWithFallback(snippet,notify,createCopyFallback());
+  });
+  peek.append(peekNote,peekCopy,peekPre);
+  const refreshPeek=()=>{
+    if(!peek.hidden)highlightInto(peekCode,sourceForCode({...project,blocks:[block]}),project.language);
+  };
   buttons.append(
+    actionButton("⌘","Show or hide this block's generated code",()=>{
+      peek.hidden=!peek.hidden;
+      refreshPeek();
+    }),
     actionButton("▸","Collapse or expand block",()=>{
       if(collapsedBlocks.has(block.id))collapsedBlocks.delete(block.id);else collapsedBlocks.add(block.id);
       section.classList.toggle("block-collapsed",collapsedBlocks.has(block.id));
@@ -366,7 +398,7 @@ function blockView(block) {
       if(loc)mutate(()=>loc.list.splice(loc.index,1));
     })
   );
-  header.append(title,buttons);section.append(header);
+  header.append(title,buttons);section.append(header,peek);
   const fields=make("div","block-fields");
   for(const key of Object.keys(definition.fields))fields.append(fieldInput(block,key));
   section.append(fields);
@@ -406,7 +438,10 @@ function updateOutputs(){
   $("footerStats").textContent=count+" blocks · "+(project.language==="javascript"?"JavaScript":"Luau");
   $("languageBadge").textContent=project.language==="javascript"?"JS":"LUAU";
   $("codeFilename").textContent=project.language==="javascript"?"script.js":"script.luau";
-  highlightInto($("codeOutput"),generate(project),project.language);
+  const code=sourceForCode();
+  highlightInto($("codeOutput"),code,project.language);
+  const metrics=countCodeMetrics(code);
+  $("codeMetrics").textContent=metrics.lines+" lines · "+metrics.chars.toLocaleString()+" chars";
   const problems=lint(project);
   $("issueCount").textContent=String(problems.length);
   const pane=$("diagnosticsPane");pane.replaceChildren();
@@ -480,6 +515,16 @@ function renderLibrary(){
   }
 }
 function bindActions(){
+  $("codeStyle").value=codePrefs.style;
+  $("codeLabels").checked=codePrefs.labels;
+  $("codeStyle").addEventListener("change",e=>{
+    codePrefs=normalizeCodePrefs({...codePrefs,style:e.target.value});
+    saveCodePrefs();queueOutputs();
+  });
+  $("codeLabels").addEventListener("change",e=>{
+    codePrefs=normalizeCodePrefs({...codePrefs,labels:e.target.checked});
+    saveCodePrefs();queueOutputs();
+  });
   $("libraryBtn").addEventListener("click",()=>{renderLibrary();$("libraryDialog").showModal();});
   $("saveSnapshotBtn").addEventListener("click",()=>{
     try{saveProjectSnapshot(localStorage,project);renderLibrary();notify("Snapshot saved to this browser");}
@@ -525,7 +570,7 @@ function bindActions(){
     notify("Template loaded. Customize each block to get started.");
   });
   const showCopyFallback=createCopyFallback();
-  const copyCurrentCode=()=>copyCodeWithFallback(generate(project),notify,showCopyFallback);
+  const copyCurrentCode=()=>copyCodeWithFallback(sourceForCode(),notify,showCopyFallback);
   $("copyCodeBtn").addEventListener("click",copyCurrentCode);
   document.addEventListener("keydown",event=>{
     if(!(event.ctrlKey||event.metaKey)||!event.shiftKey||event.key.toLowerCase()!=="c")return;
@@ -535,7 +580,7 @@ function bindActions(){
   $("exportCodeBtn").addEventListener("click",()=>{
     const issues=lint(project).filter(item=>item.severity==="error");
     if(issues.length&&!confirm(issues.length+" basic issue(s) detected. Export anyway?"))return;
-    download(safeFilename(project.title)+(project.language==="javascript"?".js":".luau"),generate(project),"text/plain;charset=utf-8");
+    download(safeFilename(project.title)+(project.language==="javascript"?".js":".luau"),sourceForCode(),"text/plain;charset=utf-8");
   });
   $("exportProjectBtn").addEventListener("click",()=>{
     download(safeFilename(project.title)+".easyscript.json",JSON.stringify(project,null,2),"application/json");
