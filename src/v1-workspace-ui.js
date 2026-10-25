@@ -1,7 +1,8 @@
 import {analyzeWorkspace} from "./project-graph.js";
 import {createZip,workspaceZipEntries} from "./zip.js";
 import {bundleSources,validateWorkspace} from "./workspace.js";
-import {generate} from "./engine.js";
+import {generate,DEFINITIONS} from "./engine.js";
+import {polishedProjectSource} from "./code-polish.js";
 import {listCustomDefinitions} from "./custom-blocks.js";
 import {addRecovery,listRecovery,restoreRecovery} from "./recovery.js";
 
@@ -18,7 +19,7 @@ function downloadZip(name,data){
   document.body.append(anchor);anchor.click();anchor.remove();
   setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
-export function mountWorkspaceV1({getWorkspace,updateWorkspace,switchFile,notify,commitNow,dialog,bottom}){
+export function mountWorkspaceV1({getWorkspace,updateWorkspace,switchFile,notify,commitNow,dialog,bottom,getCodePrefs=()=>({style:"readable",labels:false})}){
   const zip=el("button","btn compact","Download scripts ZIP");
   const graph=el("button","btn compact ghost","Module graph");
   const recovery=el("button","btn compact ghost","Recovery");
@@ -31,7 +32,7 @@ export function mountWorkspaceV1({getWorkspace,updateWorkspace,switchFile,notify
     try{
       commitNow();
       const ws=getWorkspace();
-      const data=createZip(workspaceZipEntries(ws,bundleSources,generate,listCustomDefinitions()));
+      const data=createZip(workspaceZipEntries(ws,bundleSources,project=>polishedProjectSource(project,generate,DEFINITIONS,getCodePrefs()),listCustomDefinitions()));
       downloadZip((ws.name||"EasyScript").replace(/[^a-z0-9_-]/gi,"-").slice(0,50)+".zip",data);
       notify(ws.files.length+" script files and editable backup exported as ZIP");
     }catch(e){notify("ZIP export failed: "+e.message);}
