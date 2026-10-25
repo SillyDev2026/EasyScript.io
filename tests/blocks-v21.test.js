@@ -6,7 +6,7 @@ import {LUAU_V21_DEFINITIONS} from "../src/luau-v21.js";
 import {JS_V21_DEFINITIONS,validJSName} from "../src/javascript-v21.js";
 const blank=language=>{const p=projectTemplate("blank");p.language=language;return p;};
 test("v2.1 has exactly 77 extra blocks: 39 Luau + 38 JS, for 249 total",()=>{
- assert.equal(VERSION,"2.2.0");
+ assert.equal(VERSION,"2.3.0");
  assert.equal(Object.keys(LUAU_V21_DEFINITIONS).length,39);
  assert.equal(Object.keys(JS_V21_DEFINITIONS).length,38);
  assert.equal(Object.keys(DEFINITIONS).length,249);
