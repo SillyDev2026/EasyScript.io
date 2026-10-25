@@ -1,4 +1,40 @@
-# EasyScript.io v2.2.0 — Screen-Percentage UI and Positioning
+# EasyScript.io v2.3.0 — Code Polish & Editing Quality of Life
+
+[Open EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [Source repository](https://github.com/SillyDev2026/EasyScript.io)
+
+## New code presentation features
+
+- **Readable / Compact / Original output** in the Code panel. Readable keeps consistent four-space indentation from the compiler, trims trailing spaces, and separates logical sections. Compact removes extra blank lines; Original preserves the generator's raw layout.
+- **Block labels** adds optional top-level comments such as \`-- BLOCK: Create variable\` or \`// BLOCK: Print\`. These labels are comments, not executable statements.
+- **Live metrics** shows generated line and character counts.
+- **Peek at one block's source** with the ⌘ control on its block card; copy that snippet directly. Nested previews are contextual and may refer to variables/services defined elsewhere in the full script.
+- **Saved code-view preferences** remain on the device, independently of editable project data. Switch styles without changing the underlying visual block tree.
+- **Unified exports:** Copy Code, Export Code, Copy All Code, ZIP-generated scripts and source-manifest exports use the same selected presentation settings. JSON block backups remain editable original data.
+
+## Reliability fixes
+
+- Fixed conditional-branch scope sharing that could generate an undefined \`leaderstats\` variable in an otherwise valid Roblox \`else\` branch. Each conditional branch now gets independent local state.
+- The offline simulator correctly ignores disabled blocks (including disabled function definitions). This matches the generator's disabled-block behavior.
+- Per-block copying reuses the clipboard-permission fallback dialog instead of creating a new dialog for every click.
+- Presentation is intentionally conservative: it does not rename variables, reorder functions, rewrite expressions, execute source, or remove arbitrary statements. Raw original source remains selectable when using advanced constructs, such as long LuaU strings or JavaScript template literals.
+- Added regression coverage for generated Luau/JavaScript source, format preferences, labels, export wiring, independent conditional branches and disabled-block simulation.
+
+## How to use
+
+1. Add visual blocks to the workspace.
+2. In **Generated code → Style**, select **Readable**, **Compact**, or **Original**. Toggle **Block labels** if you want comments describing the generated sections.
+3. On any block, press **⌘** to preview its source and copy it if needed.
+4. Use **Copy Code**, **Export Code**, or **Manage files → Download scripts ZIP** to keep the same presentation style in the exported sources.
+
+## Scope
+
+This release improves the source view, export consistency, and certain generator bugs. It does not claim to fix all possible bugs or validate all Roblox APIs at runtime. Luau must still be tested in Roblox Studio, and browser-specific layouts should be visually checked on actual devices.
+
+---
+
+## Previous v2.2 release notes
+
+
 
 [Open the app](https://sillydev2026.github.io/EasyScript.io/) · [Repository](https://github.com/SillyDev2026/EasyScript.io)
 
