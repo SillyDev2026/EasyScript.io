@@ -1,4 +1,40 @@
-# EasyScript.io v2.3.0 — Code Polish & Editing Quality of Life
+# EasyScript.io v2.4.0 — Fluid Studio Redesign + Script Reliability
+
+[Launch EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [Source repository](https://github.com/SillyDev2026/EasyScript.io)
+
+## New percentage-based screen layout
+
+- **Workspace width:** set the whole editor workspace to 85–100% of the available viewport width (default 100%).
+- **Horizontal placement:** position the workspace left, center, or right when narrower than the screen.
+- **Three-panel widths:** desktop Blocks / Workspace / Code proportions default to 19 / 52 / 29. Grid gaps are deducted before distributing these proportions; panels have no hard-coded pixel widths.
+- **Panel height:** 45–95% of the visible viewport height, default 72%, using dynamic viewport-height units.
+- **Code placement:** right or below on wide desktop screens; automatic below-editor placement on tablets.
+- **Phones and narrow foldables:** one 100%-width Blocks, Workspace or Code view at a time, with touch controls and independent scrolling. Full-width override is intentional for narrow screens.
+- **Cleaner UI:** consistent rounded panels, improved contrast and hierarchy, redesigned block cards, more useful mobile spacing, and an expandable Layout & sizing toolbar that keeps advanced controls discoverable without dominating the screen.
+- Existing saved layout settings remain available; Reset layout restores the defaults.
+
+Panel geometry and screen positioning are relative to screen width, viewport height and grid proportions. Minimum tap targets and legible text still use scalable rem sizes for accessibility.
+
+## Script fixes
+
+- Safe block IDs are now stable across normal workspace loads, imports, undo/redo and saved project restores, preserving block references and bookmarks.
+- Duplicate or unsafe imported IDs are regenerated uniquely.
+- Pasting copied blocks or inserting snippets intentionally allocates fresh IDs rather than accidentally duplicating IDs.
+- Disabled blocks and their children no longer count in lint diagnostics, preamble dependencies or the simulated function registry.
+- Disabled Roblox event trees no longer generate unused Players/DataStoreService setup.
+- Additional automated checks cover these changes and percentage-based screen positioning.
+
+## Verification and limitations
+
+Run npm run check and npm test locally. GitHub Actions checks the main branch.
+
+Passing tests does not prove all 249 block combinations run correctly in Roblox Studio or every CSS rendering engine. Actual browser, phone/foldable, and server/client Studio tests are still required to validate full runtime behavior.
+
+---
+
+## Previous v2.3 release notes
+
+
 
 [Open EasyScript.io](https://sillydev2026.github.io/EasyScript.io/) · [Source repository](https://github.com/SillyDev2026/EasyScript.io)
 
