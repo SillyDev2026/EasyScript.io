@@ -631,7 +631,7 @@ ultraPlus=mountUltraPlus({getProject:()=>project,getWorkspace:()=>workspace,noti
   }
 });
 ultraExpansion=mountUltraExpansion({getProject:()=>project,notify});
-workspaceUI=mountWorkspaceUI({getWorkspace:()=>workspace,switchFile,updateWorkspace,notify,commitNow,refreshPalette:()=>{setupCategories();palette();}});
+workspaceUI=mountWorkspaceUI({getWorkspace:()=>workspace,switchFile,updateWorkspace,notify,commitNow,refreshPalette:()=>{setupCategories();palette();},getCodePrefs:()=>codePrefs});
 ultraSuite=mountUltraSuite({
  getProject:()=>project,getWorkspace:()=>workspace,notify,commitNow,updateWorkspace,switchFile,
  refreshPalette:()=>{setupCategories();palette();}
