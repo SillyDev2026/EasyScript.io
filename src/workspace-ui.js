@@ -1,5 +1,6 @@
 import {activeFile,chooseFile,addFile,removeFile,renameFile,duplicateFile,validateWorkspace,createWorkspace,bundleSources} from "./workspace.js";
 import {generate} from "./engine.js";
+import {polishedProjectSource} from "./code-polish.js";
 import {copyCodeWithFallback,createCopyFallback} from "./code-copy.js";
 import {mountWorkspaceV1} from "./v1-workspace-ui.js";
 import {DEFINITIONS} from "./engine.js";
@@ -17,7 +18,7 @@ const download=(filename,content,mime)=>{
   const a=el("a");a.href=url;a.download=filename;document.body.append(a);
   a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
 };
-export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify,commitNow,refreshPalette=()=>{}}){
+export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify,commitNow,refreshPalette=()=>{},getCodePrefs=()=>({style:"readable",labels:false})}){
   const bar=el("nav","file-tabbar");
   bar.setAttribute("aria-label","Project files");
   const tabs=el("div","file-tabs");tabs.setAttribute("role","tablist");tabs.setAttribute("aria-label","Open script files");
@@ -28,6 +29,7 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
   bar.append(tabs,actions);
   document.querySelector(".project-bar").after(bar);
   const manualCopy=createCopyFallback();
+  const styledCode=project=>polishedProjectSource(project,generate,DEFINITIONS,getCodePrefs());
   const dialog=el("dialog","file-dialog");
   const heading=el("div","file-dialog-heading");
   heading.append(el("h2","","Workspace Explorer"));
@@ -136,17 +138,17 @@ export function mountWorkspaceUI({getWorkspace,switchFile,updateWorkspace,notify
     commitNow();const ws=getWorkspace();
     const manifest={format:"EasyScript-source-manifest-v1",name:ws.name,
       files:bundleSources(ws).map(file=>({
-        name:file.filename,type:file.kind,language:file.language,source:generate(file.project)
+        name:file.filename,type:file.kind,language:file.language,source:styledCode(file.project)
       }))};
     download(safeName(ws.name)+"-source-manifest.json",JSON.stringify(manifest,null,2),"application/json");
     notify("Source manifest exported (not a ZIP)");
   });
   copySourcesButton.addEventListener("click",async()=>{
     commitNow();const ws=getWorkspace();
-    const output=bundleSources(ws).map(file=>"======== "+file.filename+" ========\n"+generate(file.project)).join("\n");
+    const output=bundleSources(ws).map(file=>"======== "+file.filename+" ========\n"+styledCode(file.project)).join("\n");
     await copyCodeWithFallback(output,notify,manualCopy);
   });
-  mountWorkspaceV1({getWorkspace,updateWorkspace,switchFile,notify,commitNow,dialog,bottom});
+  mountWorkspaceV1({getWorkspace,updateWorkspace,switchFile,notify,commitNow,dialog,bottom,getCodePrefs});
   document.addEventListener("keydown",event=>{
     if(!event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
     if(event.target instanceof HTMLInputElement||event.target instanceof HTMLTextAreaElement)return;
