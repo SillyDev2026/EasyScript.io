@@ -87,7 +87,7 @@ export function saveSnippet(storage,title,project,ids){
 export function insertSnippet(project,snippet){
  if(!snippet?.blocks?.length)throw new Error("Empty snippet");
  if(snippet.language!==project.language)throw new Error("Switch to the snippet's scripting language first");
- const copy=sanitizeProject({title:"snippet",language:project.language,blocks:snippet.blocks});
+ const copy=sanitizeProject({title:"snippet",language:project.language,blocks:snippet.blocks},{regenerateIds:true});
  if(!copy.blocks.length)throw new Error("No supported blocks in snippet");
  project.blocks.push(...copy.blocks);
  return copy.blocks.length;
